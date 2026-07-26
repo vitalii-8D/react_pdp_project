@@ -7,5 +7,6 @@ import { removePostMutation } from "../lib/graphql/posts.server";
 export async function action({ request, params }: Route.ActionArgs) {
   const token = await requireToken(request);
   await removePostMutation(token, params.postId);
+
   return redirect("/my-posts");
 }

@@ -26,12 +26,20 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
 
         <dl className="mt-6 grid grid-cols-2 gap-4 text-left">
           <div className="bg-slate-50 rounded-xl p-4">
-            <dt className="text-xs font-semibold text-slate-400 uppercase">Age</dt>
-            <dd className="text-sm font-bold text-slate-800 mt-1">{user.age ?? "—"}</dd>
+            <dt className="text-xs font-semibold text-slate-400 uppercase">
+              Age
+            </dt>
+            <dd className="text-sm font-bold text-slate-800 mt-1">
+              {user.age ?? "—"}
+            </dd>
           </div>
           <div className="bg-slate-50 rounded-xl p-4">
-            <dt className="text-xs font-semibold text-slate-400 uppercase">Role</dt>
-            <dd className="text-sm font-bold text-slate-800 mt-1 capitalize">{user.role.toLowerCase()}</dd>
+            <dt className="text-xs font-semibold text-slate-400 uppercase">
+              Role
+            </dt>
+            <dd className="text-sm font-bold text-slate-800 mt-1 capitalize">
+              {user.role.toLowerCase()}
+            </dd>
           </div>
         </dl>
 

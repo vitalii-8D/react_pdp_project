@@ -30,12 +30,18 @@ export async function action({ request }: Route.ActionArgs) {
     });
     return redirect("/profile");
   } catch (error) {
-    const message = error instanceof GqlRequestError ? error.message : "Could not update your profile.";
+    const message =
+      error instanceof GqlRequestError
+        ? error.message
+        : "Could not update your profile.";
     return data({ error: message }, { status: 400 });
   }
 }
 
-export default function EditProfile({ loaderData, actionData }: Route.ComponentProps) {
+export default function EditProfile({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   const navigation = useNavigation();
   const { user } = loaderData;
   const pending = navigation.state === "submitting";
@@ -43,11 +49,16 @@ export default function EditProfile({ loaderData, actionData }: Route.ComponentP
   return (
     <div className="max-w-xl space-y-6">
       <div>
-        <h1 className="text-3xl font-black tracking-tight text-slate-900">Edit Profile</h1>
+        <h1 className="text-3xl font-black tracking-tight text-slate-900">
+          Edit Profile
+        </h1>
         <p className="text-slate-500 mt-1">Update your account information.</p>
       </div>
 
-      <Form method="post" className="space-y-5 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+      <Form
+        method="post"
+        className="space-y-5 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm"
+      >
         {actionData?.error && (
           <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
             {actionData.error}
@@ -55,7 +66,10 @@ export default function EditProfile({ loaderData, actionData }: Route.ComponentP
         )}
 
         <div>
-          <label htmlFor="name" className="block text-sm font-semibold text-slate-700 mb-1.5">
+          <label
+            htmlFor="name"
+            className="block text-sm font-semibold text-slate-700 mb-1.5"
+          >
             Name
           </label>
           <input
@@ -69,7 +83,10 @@ export default function EditProfile({ loaderData, actionData }: Route.ComponentP
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-1.5">
+          <label
+            htmlFor="email"
+            className="block text-sm font-semibold text-slate-700 mb-1.5"
+          >
             Email
           </label>
           <input
@@ -83,7 +100,10 @@ export default function EditProfile({ loaderData, actionData }: Route.ComponentP
         </div>
 
         <div>
-          <label htmlFor="age" className="block text-sm font-semibold text-slate-700 mb-1.5">
+          <label
+            htmlFor="age"
+            className="block text-sm font-semibold text-slate-700 mb-1.5"
+          >
             Age
           </label>
           <input
@@ -97,8 +117,14 @@ export default function EditProfile({ loaderData, actionData }: Route.ComponentP
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-1.5">
-            New Password <span className="text-slate-400 font-normal">(leave blank to keep current)</span>
+          <label
+            htmlFor="password"
+            className="block text-sm font-semibold text-slate-700 mb-1.5"
+          >
+            New Password{" "}
+            <span className="text-slate-400 font-normal">
+              (leave blank to keep current)
+            </span>
           </label>
           <input
             id="password"

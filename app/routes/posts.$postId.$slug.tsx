@@ -1,22 +1,25 @@
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useFetcher } from "react-router";
 
 import type { Route } from "./+types/posts.$postId.$slug";
-import { requireToken } from "../lib/auth.server";
+import { getOptionalUser } from "../lib/auth.server";
 import { postQuery } from "../lib/graphql/posts.server";
 import { Icons } from "../components/Icons";
 import { ShareModal } from "../components/ShareModal";
+import { ConfirmDialog } from "../components/ConfirmDialog";
 import { avatarUrl } from "../lib/images";
 import { formatDate } from "../lib/format";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
-  const token = await requireToken(request);
+  const { token, user } = await getOptionalUser(request);
   const post = await postQuery(token, params.postId);
 
-  const siteUrl = process.env.HOST ? `https://${process.env.HOST}` : "http://localhost:3003";
+  const siteUrl = process.env.HOST
+    ? `https://${process.env.HOST}`
+    : "http://localhost:3003";
   const url = `${siteUrl}/posts/${post.id}/${post.slug}`;
 
-  return { post, url };
+  return { post, url, currentUserId: user?.id };
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -45,7 +48,10 @@ export function meta({ loaderData }: Route.MetaArgs) {
     tags.push({ property: "og:site_name", content: og.siteName });
   }
 
-  tags.push({ name: "twitter:card", content: og?.image ? "summary_large_image" : "summary" });
+  tags.push({
+    name: "twitter:card",
+    content: og?.image ? "summary_large_image" : "summary",
+  });
   tags.push({ name: "twitter:title", content: title });
   tags.push({ name: "twitter:description", content: description });
   if (og?.image) {
@@ -56,12 +62,15 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export default function PostDetail({ loaderData }: Route.ComponentProps) {
-  const { post } = loaderData;
+  const { post, currentUserId } = loaderData;
   const [shareOpen, setShareOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const fetcher = useFetcher();
+  const isOwner = post.author.id === currentUserId;
   const coverImage = post.openGraphMetadata?.image;
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <div className="space-y-6">
       <Link
         to="/"
         className="inline-flex items-center text-sm font-semibold text-slate-600 hover:text-blue-600 transition-colors"
@@ -78,8 +87,12 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
             alt={post.author.name}
           />
           <div>
-            <p className="text-sm font-bold text-slate-900">{post.author.name}</p>
-            <p className="text-xs text-slate-400">{formatDate(post.createdAt)}</p>
+            <p className="text-sm font-bold text-slate-900">
+              {post.author.name}
+            </p>
+            <p className="text-xs text-slate-400">
+              {formatDate(post.createdAt)}
+            </p>
           </div>
         </div>
 
@@ -95,7 +108,9 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
           />
         )}
 
-        <p className="text-slate-600 whitespace-pre-line mb-6 leading-relaxed">{post.content}</p>
+        <p className="text-slate-600 whitespace-pre-line mb-6 leading-relaxed">
+          {post.content}
+        </p>
 
         {post.categories && post.categories.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
@@ -110,7 +125,7 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
           </div>
         )}
 
-        <div className="pt-4 border-t border-slate-100">
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100">
           <button
             type="button"
             onClick={() => setShareOpen(true)}
@@ -119,6 +134,27 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
             <Icons.Share />
             Share
           </button>
+
+          {isOwner && (
+            <div className="flex items-center space-x-2">
+              <Link
+                to={`/my-posts/${post.id}/edit`}
+                className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-blue-600 hover:bg-slate-50 transition-all"
+              >
+                <Icons.Edit />
+                Edit
+              </Link>
+              <button
+                type="button"
+                onClick={() => setConfirmOpen(true)}
+                className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-semibold text-red-500 hover:text-red-700 hover:bg-red-50 transition-all"
+                title="Delete post"
+              >
+                <Icons.Delete />
+                <span className="ml-1">Delete</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -128,6 +164,21 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
         postTitle={post.title}
         open={shareOpen}
         onClose={() => setShareOpen(false)}
+      />
+
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Delete this post?"
+        message="This action cannot be undone."
+        confirmLabel="Delete"
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={() => {
+          setConfirmOpen(false);
+          fetcher.submit(null, {
+            method: "post",
+            action: `/my-posts/${post.id}/destroy`,
+          });
+        }}
       />
     </div>
   );

@@ -18,6 +18,25 @@ export async function requireToken(request: Request): Promise<string> {
   return token;
 }
 
+export async function getOptionalUser(
+  request: Request,
+): Promise<{ token?: string; user?: UserEntity }> {
+  const token = await getToken(request);
+  if (!token) {
+    return {};
+  }
+
+  try {
+    const user = await meQuery(token);
+    return { token, user };
+  } catch (error) {
+    if (error instanceof GqlRequestError && error.status === 401) {
+      return {};
+    }
+    throw error;
+  }
+}
+
 export async function requireUser(
   request: Request,
 ): Promise<{ token: string; user: UserEntity }> {

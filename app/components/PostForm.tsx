@@ -7,7 +7,6 @@ import type { CategoryEntity } from "../lib/types";
 interface PostFormMetadataDefaultValues {
   image: string;
   imageAlt: string;
-  tags: string;
 }
 
 interface PostFormDefaultValues {
@@ -28,17 +27,34 @@ interface PostFormProps {
   submitLabel: string;
 }
 
-export function PostForm({ categories, defaultValues, error, pending, cancelTo, submitLabel }: PostFormProps) {
-  const [slug, setSlug] = useState(defaultValues?.slug ?? formatSlug(defaultValues?.title ?? ""));
+export function PostForm({
+  categories,
+  defaultValues,
+  error,
+  pending,
+  cancelTo,
+  submitLabel,
+}: PostFormProps) {
+  const [slug, setSlug] = useState(
+    defaultValues?.slug ?? formatSlug(defaultValues?.title ?? ""),
+  );
 
   return (
-    <Form method="post" className="space-y-5 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
+    <Form
+      method="post"
+      className="space-y-5 bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm"
+    >
       {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{error}</p>
+        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
+          {error}
+        </p>
       )}
 
       <div>
-        <label htmlFor="title" className="block text-sm font-semibold text-slate-700 mb-1.5">
+        <label
+          htmlFor="title"
+          className="block text-sm font-semibold text-slate-700 mb-1.5"
+        >
           Title
         </label>
         <input
@@ -53,7 +69,10 @@ export function PostForm({ categories, defaultValues, error, pending, cancelTo, 
       </div>
 
       <div>
-        <label htmlFor="slug" className="block text-sm font-semibold text-slate-700 mb-1.5">
+        <label
+          htmlFor="slug"
+          className="block text-sm font-semibold text-slate-700 mb-1.5"
+        >
           Slug
         </label>
         <input
@@ -62,14 +81,19 @@ export function PostForm({ categories, defaultValues, error, pending, cancelTo, 
           type="text"
           required
           value={slug}
-          onChange={(event) => setSlug(formatSlug(event.target.value))}
+          onChange={(event) => setSlug(event.target.value)}
           className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         />
-        <p className="text-xs text-slate-400 mt-1">Auto-generated from the title. Used in the post&apos;s URL.</p>
+        <p className="text-xs text-slate-400 mt-1">
+          Auto-generated from the title. Used in the post&apos;s URL.
+        </p>
       </div>
 
       <div>
-        <label htmlFor="content" className="block text-sm font-semibold text-slate-700 mb-1.5">
+        <label
+          htmlFor="content"
+          className="block text-sm font-semibold text-slate-700 mb-1.5"
+        >
           Content
         </label>
         <textarea
@@ -84,24 +108,30 @@ export function PostForm({ categories, defaultValues, error, pending, cancelTo, 
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="metadataImage" className="block text-sm font-semibold text-slate-700 mb-1.5">
+          <label
+            htmlFor="image"
+            className="block text-sm font-semibold text-slate-700 mb-1.5"
+          >
             Image URL
           </label>
           <input
-            id="metadataImage"
-            name="metadataImage"
+            id="image"
+            name="image"
             type="url"
             defaultValue={defaultValues?.metadata?.image}
             className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
           />
         </div>
         <div>
-          <label htmlFor="metadataImageAlt" className="block text-sm font-semibold text-slate-700 mb-1.5">
+          <label
+            htmlFor="imageAlt"
+            className="block text-sm font-semibold text-slate-700 mb-1.5"
+          >
             Image alt text
           </label>
           <input
-            id="metadataImageAlt"
-            name="metadataImageAlt"
+            id="imageAlt"
+            name="imageAlt"
             type="text"
             defaultValue={defaultValues?.metadata?.imageAlt}
             className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -111,7 +141,9 @@ export function PostForm({ categories, defaultValues, error, pending, cancelTo, 
 
       {categories.length > 0 && (
         <div>
-          <span className="block text-sm font-semibold text-slate-700 mb-1.5">Categories</span>
+          <span className="block text-sm font-semibold text-slate-700 mb-1.5">
+            Categories
+          </span>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <label
@@ -122,7 +154,9 @@ export function PostForm({ categories, defaultValues, error, pending, cancelTo, 
                   type="checkbox"
                   name="categoryIds"
                   value={category.id}
-                  defaultChecked={defaultValues?.categoryIds?.includes(category.id)}
+                  defaultChecked={defaultValues?.categoryIds?.includes(
+                    category.id,
+                  )}
                   className="mr-2"
                 />
                 {category.name}
@@ -143,33 +177,11 @@ export function PostForm({ categories, defaultValues, error, pending, cancelTo, 
         Published
       </label>
 
-      <details className="rounded-xl border border-slate-200 open:pb-4">
-        <summary className="cursor-pointer select-none px-4 py-3 text-sm font-semibold text-slate-700">
-          Social sharing metadata
-        </summary>
-        <div className="space-y-4 px-4 pt-1">
-          <p className="text-xs text-slate-400">
-            Optional. Powers the preview card and Open Graph tags when this post is shared.
-          </p>
-
-          <div>
-            <label htmlFor="metadataTags" className="block text-sm font-semibold text-slate-700 mb-1.5">
-              Tags
-            </label>
-            <input
-              id="metadataTags"
-              name="metadataTags"
-              type="text"
-              placeholder="comma, separated, tags"
-              defaultValue={defaultValues?.metadata?.tags}
-              className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
-        </div>
-      </details>
-
       <div className="flex items-center justify-end space-x-3 pt-2">
-        <Link to={cancelTo} className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-all">
+        <Link
+          to={cancelTo}
+          className="px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50 rounded-xl transition-all"
+        >
           Cancel
         </Link>
         <button

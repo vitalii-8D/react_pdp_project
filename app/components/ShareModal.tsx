@@ -27,7 +27,9 @@ export function ShareModal({
 
   useEffect(() => {
     if (open && fetcher.state === "idle" && !fetcher.data) {
-      fetcher.load(`/posts/${postId}/share-links?slug=${encodeURIComponent(postSlug)}`);
+      fetcher.load(
+        `/posts/${postId}/share-links?slug=${encodeURIComponent(postSlug)}`,
+      );
     }
     // fetcher identity changes every render by design; only re-run on open/postId change
     // eslint-disable-next-line react-hooks/exhaustive-deps

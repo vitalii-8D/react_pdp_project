@@ -3,9 +3,12 @@ import { data, redirect, useNavigation } from "react-router";
 import type { Route } from "./+types/my-posts.$postId.edit";
 import { requireUser, requireToken } from "../lib/auth.server";
 import { categoriesQuery } from "../lib/graphql/categories.server";
-import { postQuery, updatePostMutation } from "../lib/graphql/posts.server";
+import {
+  postQuery,
+  updatePostMutation,
+  type PostMetadataInput,
+} from "../lib/graphql/posts.server";
 import { GqlRequestError } from "../lib/graphql-client.server";
-import { readMetadata } from "../lib/post-metadata-form";
 import { PostForm } from "../components/PostForm";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
@@ -31,26 +34,59 @@ export async function action({ request, params }: Route.ActionArgs) {
   const slug = String(formData.get("slug") ?? "");
   const published = formData.get("published") === "true";
   const categoryIds = formData.getAll("categoryIds").map(String);
-  const metadata = readMetadata(formData);
+  const image = String(formData.get("image") ?? "").trim();
+  const imageAlt = String(formData.get("imageAlt") ?? "").trim();
+
+  const categories = await categoriesQuery(token);
+  const tags = categories
+    .filter((category) => categoryIds.includes(category.id))
+    .map((category) => category.name.toLowerCase());
+
+  let metadata: PostMetadataInput | undefined = undefined;
+  if (image || imageAlt || tags.length) {
+    metadata = {
+      ...(image && { image }),
+      ...(imageAlt && { imageAlt }),
+      ...(tags.length && { tags }),
+    };
+  }
 
   try {
-    await updatePostMutation(token, { id: params.postId, title, content, slug, published, categoryIds, metadata });
+    await updatePostMutation(token, {
+      id: params.postId,
+      title,
+      content,
+      slug,
+      published,
+      categoryIds,
+      metadata,
+    });
     return redirect("/my-posts");
   } catch (error) {
-    const message = error instanceof GqlRequestError ? error.message : "Could not update the post.";
+    const message =
+      error instanceof GqlRequestError
+        ? error.message
+        : "Could not update the post.";
     return data({ error: message }, { status: 400 });
   }
 }
 
-export default function EditPost({ loaderData, actionData }: Route.ComponentProps) {
+export default function EditPost({
+  loaderData,
+  actionData,
+}: Route.ComponentProps) {
   const navigation = useNavigation();
   const { post, categories } = loaderData;
 
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <h1 className="text-3xl font-black tracking-tight text-slate-900">Edit Post</h1>
-        <p className="text-slate-500 mt-1">Update your post and save your changes.</p>
+        <h1 className="text-3xl font-black tracking-tight text-slate-900">
+          Edit Post
+        </h1>
+        <p className="text-slate-500 mt-1">
+          Update your post and save your changes.
+        </p>
       </div>
 
       <PostForm
@@ -64,7 +100,6 @@ export default function EditPost({ loaderData, actionData }: Route.ComponentProp
           metadata: {
             image: post.openGraphMetadata?.image ?? undefined,
             imageAlt: post.openGraphMetadata?.imageAlt ?? undefined,
-            tags: post.openGraphMetadata?.tags?.join(", "),
           },
         }}
         error={actionData?.error}

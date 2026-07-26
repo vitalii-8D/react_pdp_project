@@ -36,7 +36,7 @@ const POST_FIELDS = gql`
   }
 `;
 
-export async function postsQuery(token: string): Promise<PostEntity[]> {
+export async function postsQuery(token?: string): Promise<PostEntity[]> {
   const query = gql`
     ${POST_FIELDS}
     query Posts {
@@ -53,8 +53,27 @@ export async function postsQuery(token: string): Promise<PostEntity[]> {
   return data.posts;
 }
 
+export async function myPostsQuery(token: string): Promise<PostEntity[]> {
+  const query = gql`
+    ${POST_FIELDS}
+    query MyPosts {
+      me {
+        posts {
+          ...PostFields
+        }
+      }
+    }
+  `;
+  const data = await gqlRequest<{ me: { posts: PostEntity[] } }>(
+    query,
+    undefined,
+    token,
+  );
+  return data.me.posts;
+}
+
 export async function postQuery(
-  token: string,
+  token: string | undefined,
   id: string,
 ): Promise<PostEntity> {
   const query = gql`

@@ -8,7 +8,13 @@ import { avatarUrl } from "../lib/images";
 import { formatDate } from "../lib/format";
 import type { PostEntity } from "../lib/types";
 
-export function PostCard({ post, currentUserId }: { post: PostEntity; currentUserId: string }) {
+export function PostCard({
+  post,
+  currentUserId,
+}: {
+  post: PostEntity;
+  currentUserId?: string;
+}) {
   const [shareOpen, setShareOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const fetcher = useFetcher();
@@ -26,8 +32,12 @@ export function PostCard({ post, currentUserId }: { post: PostEntity; currentUse
               alt={post.author.name}
             />
             <div>
-              <p className="text-sm font-bold text-slate-900">{post.author.name}</p>
-              <p className="text-xs text-slate-400">{formatDate(post.createdAt)}</p>
+              <p className="text-sm font-bold text-slate-900">
+                {post.author.name}
+              </p>
+              <p className="text-xs text-slate-400">
+                {formatDate(post.createdAt)}
+              </p>
             </div>
           </div>
 
@@ -38,7 +48,9 @@ export function PostCard({ post, currentUserId }: { post: PostEntity; currentUse
           )}
         </div>
 
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3 leading-tight">{post.title}</h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3 leading-tight">
+          {post.title}
+        </h2>
 
         {coverImage && (
           <img
@@ -48,7 +60,9 @@ export function PostCard({ post, currentUserId }: { post: PostEntity; currentUse
           />
         )}
 
-        <p className="text-slate-600 whitespace-pre-line mb-4 leading-relaxed text-sm sm:text-base">{post.content}</p>
+        <p className="text-slate-600 whitespace-pre-line mb-4 leading-relaxed text-sm sm:text-base">
+          {post.content}
+        </p>
 
         {post.categories && post.categories.length > 0 && (
           <div className="flex flex-wrap gap-2 mb-6">
@@ -112,7 +126,10 @@ export function PostCard({ post, currentUserId }: { post: PostEntity; currentUse
         onCancel={() => setConfirmOpen(false)}
         onConfirm={() => {
           setConfirmOpen(false);
-          fetcher.submit(null, { method: "post", action: `/my-posts/${post.id}/destroy` });
+          fetcher.submit(null, {
+            method: "post",
+            action: `/my-posts/${post.id}/destroy`,
+          });
         }}
       />
     </div>

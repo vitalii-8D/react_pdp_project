@@ -5,7 +5,7 @@ import { gqlRequest } from "../graphql-client.server";
 import type { ShareLinks } from "../types";
 
 export async function generateShareLinksQuery(
-  token: string,
+  token: string | undefined,
   url: string,
   postId?: string,
 ): Promise<ShareLinks> {
