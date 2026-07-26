@@ -1,9 +1,6 @@
 import { SocialPlatform } from "../enums/social-platform.enum";
-
-export enum UserRole {
-  USER = "USER",
-  ADMIN = "ADMIN",
-}
+import { UserRole } from "../enums/user-role.enum";
+import { OgType } from "../enums/og-type.enum";
 
 export interface UserEntity {
   id: string;
@@ -18,17 +15,6 @@ export interface CategoryEntity {
   id: string;
   name: string;
   description?: string | null;
-}
-
-export enum OgType {
-  ARTICLE = "ARTICLE",
-  BOOK = "BOOK",
-  EVENT = "EVENT",
-  MUSIC = "MUSIC",
-  PRODUCT = "PRODUCT",
-  RECIPE = "RECIPE",
-  VIDEO = "VIDEO",
-  WEBSITE = "WEBSITE",
 }
 
 export interface OpenGraphMetadataEntity {

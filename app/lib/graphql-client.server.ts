@@ -1,3 +1,4 @@
+import { data } from "react-router";
 import { GraphQLClient, ClientError, type Variables } from "graphql-request";
 
 const SERVER_URL = process.env.SERVER_URL ?? "http://localhost:3000/graphql";
@@ -39,6 +40,13 @@ function extractMessage(error: ClientError): {
   const status = originalError?.statusCode ?? error.response?.status ?? 500;
 
   return { message, status };
+}
+
+export function toActionError(error: unknown, fallback: string) {
+  return data(
+    { error: error instanceof GqlRequestError ? error.message : fallback },
+    { status: 400 },
+  );
 }
 
 export async function gqlRequest<T>(

@@ -1,6 +1,8 @@
 import { gql } from "graphql-request";
 
 import { gqlRequest, GqlRequestError } from "../graphql-client.server";
+import { categoriesQuery } from "./categories.server";
+import { PostFormField } from "../../enums/post-form-field.enum";
 import type { PostEntity } from "../types";
 
 const POST_FIELDS = gql`
@@ -92,6 +94,44 @@ export interface PostMetadataInput {
   image?: string;
   imageAlt?: string;
   tags?: string[];
+}
+
+export interface ParsedPostFormInput {
+  title: string;
+  content: string;
+  slug: string;
+  published: boolean;
+  categoryIds: string[];
+  metadata?: PostMetadataInput;
+}
+
+export async function parsePostFormInput(
+  token: string,
+  formData: FormData,
+): Promise<ParsedPostFormInput> {
+  const title = String(formData.get(PostFormField.Title) ?? "");
+  const content = String(formData.get(PostFormField.Content) ?? "");
+  const slug = String(formData.get(PostFormField.Slug) ?? "");
+  const published = formData.get(PostFormField.Published) === "true";
+  const categoryIds = formData.getAll(PostFormField.CategoryIds).map(String);
+  const image = String(formData.get(PostFormField.Image) ?? "").trim();
+  const imageAlt = String(formData.get(PostFormField.ImageAlt) ?? "").trim();
+
+  const categories = await categoriesQuery(token);
+  const tags = categories
+    .filter((category) => categoryIds.includes(category.id))
+    .map((category) => category.name.toLowerCase());
+
+  let metadata: PostMetadataInput | undefined = undefined;
+  if (image || imageAlt || tags.length) {
+    metadata = {
+      ...(image && { image }),
+      ...(imageAlt && { imageAlt }),
+      ...(tags.length && { tags }),
+    };
+  }
+
+  return { title, content, slug, published, categoryIds, metadata };
 }
 
 export interface CreatePostInput {

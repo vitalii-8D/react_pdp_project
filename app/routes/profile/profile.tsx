@@ -1,9 +1,12 @@
 import { Link } from "react-router";
 
 import type { Route } from "./+types/profile";
-import { requireUser } from "../lib/auth.server";
-import { avatarUrl } from "../lib/images";
-import { Icons } from "../components/Icons";
+import { requireUser } from "../../lib/auth.server";
+import { avatarUrl } from "../../lib/images";
+import { paths } from "../../lib/paths";
+import { Icons } from "../../components/Icons";
+import { Card } from "../../components/Card";
+import { buttonStyles } from "../../components/Button";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { user } = await requireUser(request);
@@ -15,7 +18,7 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
 
   return (
     <div className="max-w-xl">
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-8 text-center">
+      <Card className="p-8 text-center">
         <img
           src={avatarUrl(user.id)}
           alt={user.name}
@@ -44,13 +47,13 @@ export default function Profile({ loaderData }: Route.ComponentProps) {
         </dl>
 
         <Link
-          to="/profile/edit"
-          className="mt-6 inline-flex items-center px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-md transition-all"
+          to={paths.profileEdit()}
+          className={buttonStyles({ size: "lg", className: "mt-6" })}
         >
           <Icons.Edit />
           Edit Profile
         </Link>
-      </div>
+      </Card>
     </div>
   );
 }

@@ -1,15 +1,16 @@
-import { data, redirect, useNavigation } from "react-router";
+import { redirect, useNavigation } from "react-router";
 
 import type { Route } from "./+types/my-posts.$postId.edit";
-import { requireUser, requireToken } from "../lib/auth.server";
-import { categoriesQuery } from "../lib/graphql/categories.server";
+import { requireUser, requireToken } from "../../lib/auth.server";
+import { categoriesQuery } from "../../lib/graphql/categories.server";
 import {
   postQuery,
   updatePostMutation,
-  type PostMetadataInput,
-} from "../lib/graphql/posts.server";
-import { GqlRequestError } from "../lib/graphql-client.server";
-import { PostForm } from "../components/PostForm";
+  parsePostFormInput,
+} from "../../lib/graphql/posts.server";
+import { toActionError } from "../../lib/graphql-client.server";
+import { paths } from "../../lib/paths";
+import { PostForm } from "../../components/PostForm";
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { token, user } = await requireUser(request);
@@ -19,7 +20,7 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   ]);
 
   if (post.author.id !== user.id) {
-    throw redirect("/my-posts");
+    throw redirect(paths.myPosts());
   }
 
   return { post, categories };
@@ -28,46 +29,13 @@ export async function loader({ request, params }: Route.LoaderArgs) {
 export async function action({ request, params }: Route.ActionArgs) {
   const token = await requireToken(request);
   const formData = await request.formData();
-
-  const title = String(formData.get("title") ?? "");
-  const content = String(formData.get("content") ?? "");
-  const slug = String(formData.get("slug") ?? "");
-  const published = formData.get("published") === "true";
-  const categoryIds = formData.getAll("categoryIds").map(String);
-  const image = String(formData.get("image") ?? "").trim();
-  const imageAlt = String(formData.get("imageAlt") ?? "").trim();
-
-  const categories = await categoriesQuery(token);
-  const tags = categories
-    .filter((category) => categoryIds.includes(category.id))
-    .map((category) => category.name.toLowerCase());
-
-  let metadata: PostMetadataInput | undefined = undefined;
-  if (image || imageAlt || tags.length) {
-    metadata = {
-      ...(image && { image }),
-      ...(imageAlt && { imageAlt }),
-      ...(tags.length && { tags }),
-    };
-  }
+  const input = await parsePostFormInput(token, formData);
 
   try {
-    await updatePostMutation(token, {
-      id: params.postId,
-      title,
-      content,
-      slug,
-      published,
-      categoryIds,
-      metadata,
-    });
-    return redirect("/my-posts");
+    await updatePostMutation(token, { id: params.postId, ...input });
+    return redirect(paths.myPosts());
   } catch (error) {
-    const message =
-      error instanceof GqlRequestError
-        ? error.message
-        : "Could not update the post.";
-    return data({ error: message }, { status: 400 });
+    return toActionError(error, "Could not update the post.");
   }
 }
 
@@ -104,7 +72,7 @@ export default function EditPost({
         }}
         error={actionData?.error}
         pending={navigation.state === "submitting"}
-        cancelTo="/my-posts"
+        cancelTo={paths.myPosts()}
         submitLabel="Save Changes"
       />
     </div>

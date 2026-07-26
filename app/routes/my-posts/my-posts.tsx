@@ -1,10 +1,13 @@
 import { Link } from "react-router";
 
 import type { Route } from "./+types/my-posts";
-import { requireUser } from "../lib/auth.server";
-import { myPostsQuery } from "../lib/graphql/posts.server";
-import { PostCard } from "../components/PostCard";
-import { Icons } from "../components/Icons";
+import { requireUser } from "../../lib/auth.server";
+import { myPostsQuery } from "../../lib/graphql/posts.server";
+import { paths } from "../../lib/paths";
+import { PostCard } from "../../components/PostCard";
+import { Icons } from "../../components/Icons";
+import { Card } from "../../components/Card";
+import { buttonStyles } from "../../components/Button";
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { token, user } = await requireUser(request);
@@ -28,8 +31,8 @@ export default function MyPosts({ loaderData }: Route.ComponentProps) {
           </p>
         </div>
         <Link
-          to="/my-posts/new"
-          className="inline-flex items-center justify-center px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl shadow-md transition-all self-start"
+          to={paths.myPostsNew()}
+          className={buttonStyles({ size: "lg", className: "self-start" })}
         >
           <Icons.Plus />
           Create Post
@@ -37,17 +40,17 @@ export default function MyPosts({ loaderData }: Route.ComponentProps) {
       </div>
 
       {posts.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-sm">
+        <Card className="p-12 text-center">
           <p className="text-slate-400 text-lg">
             You haven&apos;t written any posts yet.
           </p>
           <Link
-            to="/my-posts/new"
-            className="mt-4 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all inline-flex items-center"
+            to={paths.myPostsNew()}
+            className={buttonStyles({ size: "lg", className: "mt-4" })}
           >
             <Icons.Plus /> Create your first post
           </Link>
-        </div>
+        </Card>
       ) : (
         <div className="space-y-6">
           {posts.map((post) => (

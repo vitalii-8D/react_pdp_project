@@ -1,7 +1,9 @@
 import { createCookieSessionStorage } from "react-router";
 
+export const SESSION_TOKEN_KEY = "token";
+
 interface SessionData {
-  token: string;
+  [SESSION_TOKEN_KEY]: string;
 }
 
 const { getSession, commitSession, destroySession } =

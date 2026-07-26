@@ -1,19 +1,24 @@
 import { redirect } from "react-router";
 
-import { getSession, destroySession } from "./sessions.server";
+import {
+  getSession,
+  destroySession,
+  SESSION_TOKEN_KEY,
+} from "./sessions.server";
 import { meQuery } from "./graphql/users.server";
 import { GqlRequestError } from "./graphql-client.server";
+import { paths } from "./paths";
 import type { UserEntity } from "./types";
 
 export async function getToken(request: Request): Promise<string | undefined> {
   const session = await getSession(request.headers.get("Cookie"));
-  return session.get("token");
+  return session.get(SESSION_TOKEN_KEY);
 }
 
 export async function requireToken(request: Request): Promise<string> {
   const token = await getToken(request);
   if (!token) {
-    throw redirect("/login");
+    throw redirect(paths.login());
   }
   return token;
 }
@@ -48,7 +53,7 @@ export async function requireUser(
   } catch (error) {
     if (error instanceof GqlRequestError && error.status === 401) {
       const session = await getSession(request.headers.get("Cookie"));
-      throw redirect("/login", {
+      throw redirect(paths.login(), {
         headers: { "Set-Cookie": await destroySession(session) },
       });
     }
