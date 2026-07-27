@@ -1,4 +1,5 @@
 import {
+  data,
   redirect,
   Form,
   Link,
@@ -10,6 +11,7 @@ import type { Route } from "./+types/register";
 import {
   getSession,
   commitSession,
+  destroySession,
   SESSION_TOKEN_KEY,
 } from "../../lib/sessions.server";
 import {
@@ -17,6 +19,7 @@ import {
   loginMutation,
 } from "../../lib/graphql/users.server";
 import { toActionError } from "../../lib/graphql-client.server";
+import { getOptionalUser } from "../../lib/auth.server";
 import { safeRedirectPath } from "../../lib/safe-redirect";
 import { AuthFormField } from "../../enums/auth-form-field.enum";
 import { paths } from "../../lib/paths";
@@ -26,11 +29,19 @@ import { Button } from "../../components/Button";
 import { cardClassName } from "../../components/Card";
 
 export async function loader({ request }: Route.LoaderArgs) {
-  const session = await getSession(request.headers.get("Cookie"));
-  if (session.has(SESSION_TOKEN_KEY)) {
+  const { user } = await getOptionalUser(request);
+  if (user) {
     const from = new URL(request.url).searchParams.get("from");
     throw redirect(safeRedirectPath(from));
   }
+
+  const session = await getSession(request.headers.get("Cookie"));
+  if (session.has(SESSION_TOKEN_KEY)) {
+    return data(null, {
+      headers: { "Set-Cookie": await destroySession(session) },
+    });
+  }
+
   return null;
 }
 
