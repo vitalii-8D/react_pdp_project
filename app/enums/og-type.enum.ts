@@ -1,0 +1,10 @@
+export enum OgType {
+  ARTICLE = "ARTICLE",
+  BOOK = "BOOK",
+  EVENT = "EVENT",
+  MUSIC = "MUSIC",
+  PRODUCT = "PRODUCT",
+  RECIPE = "RECIPE",
+  VIDEO = "VIDEO",
+  WEBSITE = "WEBSITE",
+}
