@@ -62,6 +62,32 @@ export interface ShareLinks {
 }
 
 export interface AuthResponse {
-  access_token: string;
+  accessToken: string;
   user: UserEntity;
+}
+
+export interface ChatMessageUser {
+  id: string;
+  name: string;
+  email: string;
+}
+
+export interface ChatRoomEntity {
+  id: string;
+  name: string;
+  description?: string | null;
+  isDirect: boolean;
+  participants: ChatMessageUser[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ChatMessageEntity {
+  id: string;
+  message: string;
+  userId: string;
+  user: ChatMessageUser;
+  roomId: string;
+  createdAt: string;
+  isAdminBroadcast?: boolean;
 }

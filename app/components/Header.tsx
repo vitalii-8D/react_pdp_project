@@ -12,6 +12,7 @@ export function Header({ user }: { user?: UserEntity }) {
   const location = useLocation();
   const isMyPosts = location.pathname.startsWith(paths.myPosts());
   const isPosts = location.pathname === paths.posts();
+  const isChat = location.pathname.startsWith(paths.chat());
   const loginHref = paths.login(location.pathname + location.search);
 
   return (
@@ -39,21 +40,17 @@ export function Header({ user }: { user?: UserEntity }) {
                 <span className="ml-2">My Posts</span>
               </NavLink>
             )}
+            {user && (
+              <NavLink to={paths.chat()} isActive={isChat}>
+                <Icons.Chat />
+                <span className="ml-2">Chat</span>
+              </NavLink>
+            )}
           </nav>
 
           <div className="flex items-center space-x-3 sm:space-x-4">
             {user ? (
               <>
-                <Link
-                  to={paths.myPostsNew()}
-                  className={buttonStyles({
-                    className: "hidden md:flex",
-                  })}
-                >
-                  <Icons.Plus />
-                  Create Post
-                </Link>
-
                 <div className="flex items-center space-x-2 pl-2 sm:pl-3 border-l border-slate-200">
                   <Link
                     to={paths.profile()}
@@ -99,6 +96,13 @@ export function Header({ user }: { user?: UserEntity }) {
             <NavLink to={paths.myPosts()} isActive={isMyPosts} size="sm">
               <Icons.MyPosts />
               <span className="ml-2">My Posts</span>
+            </NavLink>
+          )}
+
+          {user && (
+            <NavLink to={paths.chat()} isActive={isChat} size="sm">
+              <Icons.Chat />
+              <span className="ml-2">Chat</span>
             </NavLink>
           )}
         </nav>

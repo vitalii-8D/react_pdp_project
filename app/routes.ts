@@ -28,5 +28,10 @@ export default [
 
     route("profile", "routes/profile/profile.tsx"),
     route("profile/edit", "routes/profile/profile.edit.tsx"),
+
+    route("chat", "routes/chat/chat.tsx"),
+    route("chat/users/search", "routes/chat/chat.users-search.tsx"),
+    route("chat/dm", "routes/chat/chat.start-dm.tsx"),
+    route("chat/:roomId", "routes/chat/chat.$roomId.tsx"),
   ]),
 ] satisfies RouteConfig;

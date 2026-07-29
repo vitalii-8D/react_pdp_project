@@ -49,15 +49,15 @@ export async function action({ request }: Route.ActionArgs) {
   const from = safeRedirectPath(String(formData.get(AuthFormField.From) ?? ""));
 
   try {
-    const { access_token } = await loginMutation(email, password);
+    const { accessToken } = await loginMutation(email, password);
     const session = await getSession(request.headers.get("Cookie"));
-    session.set(SESSION_TOKEN_KEY, access_token);
+    session.set(SESSION_TOKEN_KEY, accessToken);
 
     return redirect(from, {
       headers: { "Set-Cookie": await commitSession(session) },
     });
   } catch (error) {
-    return toActionError(error, "Something went wrong. Please try again.");
+    return toActionError(error);
   }
 }
 

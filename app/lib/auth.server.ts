@@ -12,6 +12,7 @@ import type { UserEntity } from "./types";
 
 export async function getToken(request: Request): Promise<string | undefined> {
   const session = await getSession(request.headers.get("Cookie"));
+
   return session.get(SESSION_TOKEN_KEY);
 }
 
@@ -20,6 +21,7 @@ export async function requireToken(request: Request): Promise<string> {
   if (!token) {
     throw redirect(paths.login());
   }
+
   return token;
 }
 

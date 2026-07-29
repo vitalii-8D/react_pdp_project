@@ -15,7 +15,7 @@ const { getSession, commitSession, destroySession } =
       sameSite: "lax",
       secrets: [process.env.SESSION_SECRET || "dev-secret-change-me"],
       secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 60, // 60 days, mirrors BE's default JWT_EXPIRE
+      maxAge: 60 * 60 * 24 * 60,
     },
   });
 

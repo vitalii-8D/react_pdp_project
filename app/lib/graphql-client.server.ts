@@ -1,7 +1,8 @@
 import { data } from "react-router";
 import { GraphQLClient, ClientError, type Variables } from "graphql-request";
 
-const SERVER_URL = process.env.SERVER_URL ?? "http://localhost:3000/graphql";
+const SERVER_URL = process.env.SERVER_URL ?? "http://localhost:3000";
+const client = new GraphQLClient(`${SERVER_URL}/graphql`);
 
 export class GqlRequestError extends Error {
   status: number;
@@ -11,15 +12,6 @@ export class GqlRequestError extends Error {
     this.name = "GqlRequestError";
     this.status = status;
   }
-}
-
-function friendlyMessage(message: string): string {
-  // BE doesn't wrap the TypeORM unique-constraint error, so it leaks the raw
-  // SQLite message; translate the one case the FE actually triggers (email sign-up/change).
-  if (message.includes("UNIQUE constraint failed: users.email")) {
-    return "An account with this email already exists.";
-  }
-  return message;
 }
 
 function extractMessage(error: ClientError): {
@@ -34,15 +26,18 @@ function extractMessage(error: ClientError): {
   )?.originalError;
 
   const rawMessage = originalError?.message ?? first?.message ?? error.message;
-  const message = friendlyMessage(
-    Array.isArray(rawMessage) ? rawMessage.join(", ") : rawMessage,
-  );
+  const message = Array.isArray(rawMessage)
+    ? rawMessage.join(", ")
+    : rawMessage;
   const status = originalError?.statusCode ?? error.response?.status ?? 500;
 
   return { message, status };
 }
 
-export function toActionError(error: unknown, fallback: string) {
+export function toActionError(
+  error: unknown,
+  fallback = "Something went wrong. Please try again.",
+) {
   return data(
     { error: error instanceof GqlRequestError ? error.message : fallback },
     { status: 400 },
@@ -54,9 +49,9 @@ export async function gqlRequest<T>(
   variables?: Variables,
   token?: string,
 ): Promise<T> {
-  const client = new GraphQLClient(SERVER_URL, {
-    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
-  });
+  if (token) {
+    client.setHeader("Authorization", `Bearer ${token}`);
+  }
 
   try {
     return await client.request<T>(query, variables);

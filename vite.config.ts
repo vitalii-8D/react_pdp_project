@@ -5,14 +5,17 @@ import { config } from "dotenv";
 
 config();
 
+const host = process.env.HOST || "localhost";
+const port = process.env.PORT ? Number(process.env.PORT) : 3003;
+
 export default defineConfig({
   plugins: [tailwindcss(), reactRouter()],
   resolve: {
     tsconfigPaths: true,
   },
   server: {
-    port: process.env.PORT ? Number(process.env.PORT) : 3003,
-    allowedHosts: ["f247-157-245-67-12.ngrok-free.app"],
+    port,
+    allowedHosts: [host],
     host: "0.0.0.0",
   },
 });

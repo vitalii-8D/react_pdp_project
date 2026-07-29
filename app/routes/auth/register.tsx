@@ -57,9 +57,9 @@ export async function action({ request }: Route.ActionArgs) {
   try {
     await createUserMutation({ name, email, password, age });
     // createUser doesn't return a token, so log in immediately after registering.
-    const { access_token } = await loginMutation(email, password);
+    const { accessToken } = await loginMutation(email, password);
     const session = await getSession(request.headers.get("Cookie"));
-    session.set(SESSION_TOKEN_KEY, access_token);
+    session.set(SESSION_TOKEN_KEY, accessToken);
 
     return redirect(from, {
       headers: { "Set-Cookie": await commitSession(session) },
