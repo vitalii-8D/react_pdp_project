@@ -1,7 +1,7 @@
-import { gql } from "graphql-request";
+import { gql } from 'graphql-request';
 
-import { gqlRequest } from "../graphql-client.server";
-import type { ChatMessageEntity, ChatRoomEntity } from "../types";
+import { gqlRequest } from '../graphql-client.server';
+import type { ChatMessageEntity, ChatRoomEntity } from '../types';
 
 const CHAT_ROOM_FIELDS = gql`
   fragment ChatRoomFields on ChatRoomEntity {
@@ -44,18 +44,12 @@ export async function chatRoomsQuery(token: string): Promise<ChatRoomEntity[]> {
     }
   `;
 
-  const data = await gqlRequest<{ chatRooms: ChatRoomEntity[] }>(
-    query,
-    undefined,
-    token,
-  );
+  const data = await gqlRequest<{ chatRooms: ChatRoomEntity[] }>(query, undefined, token);
 
   return data.chatRooms;
 }
 
-export async function myDirectMessageRoomsQuery(
-  token: string,
-): Promise<ChatRoomEntity[]> {
+export async function myDirectMessageRoomsQuery(token: string): Promise<ChatRoomEntity[]> {
   const query = gql`
     ${CHAT_ROOM_FIELDS}
     query MyDirectMessageRooms {
@@ -65,19 +59,12 @@ export async function myDirectMessageRoomsQuery(
     }
   `;
 
-  const data = await gqlRequest<{ myDirectMessageRooms: ChatRoomEntity[] }>(
-    query,
-    undefined,
-    token,
-  );
+  const data = await gqlRequest<{ myDirectMessageRooms: ChatRoomEntity[] }>(query, undefined, token);
 
   return data.myDirectMessageRooms;
 }
 
-export async function startDirectMessageMutation(
-  token: string,
-  userId: string,
-): Promise<ChatRoomEntity> {
+export async function startDirectMessageMutation(token: string, userId: string): Promise<ChatRoomEntity> {
   const query = gql`
     ${CHAT_ROOM_FIELDS}
     mutation StartDirectMessage($userId: ID!) {
@@ -87,19 +74,12 @@ export async function startDirectMessageMutation(
     }
   `;
 
-  const data = await gqlRequest<{ startDirectMessage: ChatRoomEntity }>(
-    query,
-    { userId },
-    token,
-  );
+  const data = await gqlRequest<{ startDirectMessage: ChatRoomEntity }>(query, { userId }, token);
 
   return data.startDirectMessage;
 }
 
-export async function chatRoomQuery(
-  token: string,
-  id: string,
-): Promise<ChatRoomEntity> {
+export async function chatRoomQuery(token: string, id: string): Promise<ChatRoomEntity> {
   const query = gql`
     ${CHAT_ROOM_FIELDS}
     query ChatRoom($id: ID!) {
@@ -109,19 +89,12 @@ export async function chatRoomQuery(
     }
   `;
 
-  const data = await gqlRequest<{ chatRoom: ChatRoomEntity }>(
-    query,
-    { id },
-    token,
-  );
+  const data = await gqlRequest<{ chatRoom: ChatRoomEntity }>(query, { id }, token);
 
   return data.chatRoom;
 }
 
-export async function chatRoomMessagesQuery(
-  token: string,
-  roomId: string,
-): Promise<ChatMessageEntity[]> {
+export async function chatRoomMessagesQuery(token: string, roomId: string): Promise<ChatMessageEntity[]> {
   const query = gql`
     ${CHAT_MESSAGE_FIELDS}
     query ChatRoomMessages($roomId: ID!) {
@@ -131,11 +104,7 @@ export async function chatRoomMessagesQuery(
     }
   `;
 
-  const data = await gqlRequest<{ chatRoomMessages: ChatMessageEntity[] }>(
-    query,
-    { roomId },
-    token,
-  );
+  const data = await gqlRequest<{ chatRoomMessages: ChatMessageEntity[] }>(query, { roomId }, token);
 
   return data.chatRoomMessages;
 }
@@ -145,10 +114,7 @@ export interface CreateChatRoomInput {
   description?: string;
 }
 
-export async function createChatRoomMutation(
-  token: string,
-  input: CreateChatRoomInput,
-): Promise<ChatRoomEntity> {
+export async function createChatRoomMutation(token: string, input: CreateChatRoomInput): Promise<ChatRoomEntity> {
   const query = gql`
     ${CHAT_ROOM_FIELDS}
     mutation CreateChatRoom($createRoomInput: CreateRoomInput!) {
@@ -158,11 +124,7 @@ export async function createChatRoomMutation(
     }
   `;
 
-  const data = await gqlRequest<{ createChatRoom: ChatRoomEntity }>(
-    query,
-    { createRoomInput: input },
-    token,
-  );
+  const data = await gqlRequest<{ createChatRoom: ChatRoomEntity }>(query, { createRoomInput: input }, token);
 
   return data.createChatRoom;
 }

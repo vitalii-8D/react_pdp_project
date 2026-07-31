@@ -1,7 +1,7 @@
-import { gql } from "graphql-request";
+import { gql } from 'graphql-request';
 
-import { gqlRequest } from "../graphql-client.server";
-import type { AuthResponse, ChatMessageUser, UserEntity } from "../types";
+import { gqlRequest } from '../graphql-client.server';
+import type { AuthResponse, ChatMessageUser, UserEntity } from '../types';
 
 const USER_FIELDS = gql`
   fragment UserFields on UserEntity {
@@ -10,6 +10,10 @@ const USER_FIELDS = gql`
     name
     age
     role
+    avatar {
+      id
+      url
+    }
   }
 `;
 
@@ -28,10 +32,41 @@ export async function meQuery(token: string): Promise<UserEntity> {
   return data.me;
 }
 
-export async function loginMutation(
-  email: string,
-  password: string,
-): Promise<AuthResponse> {
+export interface UserAvatarDetails {
+  id: string;
+  key: string;
+  url: string;
+  originalFileName: string;
+  mimeType: string;
+  sizeBytes: number;
+}
+
+export async function meWithAvatarQuery(token: string): Promise<UserEntity & { avatar?: UserAvatarDetails | null }> {
+  const query = gql`
+    ${USER_FIELDS}
+    query MeWithAvatar {
+      me {
+        ...UserFields
+        avatar {
+          id
+          key
+          url
+          originalFileName
+          mimeType
+          sizeBytes
+        }
+      }
+    }
+  `;
+
+  const data = await gqlRequest<{
+    me: UserEntity & { avatar?: UserAvatarDetails | null };
+  }>(query, undefined, token);
+
+  return data.me;
+}
+
+export async function loginMutation(email: string, password: string): Promise<AuthResponse> {
   const query = gql`
     ${USER_FIELDS}
     mutation Login($loginInput: LoginInput!) {
@@ -51,10 +86,7 @@ export async function loginMutation(
   return data.login;
 }
 
-export async function searchUsersQuery(
-  token: string,
-  query: string,
-): Promise<ChatMessageUser[]> {
+export async function searchUsersQuery(token: string, query: string): Promise<ChatMessageUser[]> {
   const gqlQuery = gql`
     query SearchUsers($query: String!) {
       searchUsers(query: $query) {
@@ -65,11 +97,7 @@ export async function searchUsersQuery(
     }
   `;
 
-  const data = await gqlRequest<{ searchUsers: ChatMessageUser[] }>(
-    gqlQuery,
-    { query },
-    token,
-  );
+  const data = await gqlRequest<{ searchUsers: ChatMessageUser[] }>(gqlQuery, { query }, token);
 
   return data.searchUsers;
 }
@@ -81,9 +109,7 @@ export interface CreateUserInput {
   age?: number;
 }
 
-export async function createUserMutation(
-  input: CreateUserInput,
-): Promise<UserEntity> {
+export async function createUserMutation(input: CreateUserInput): Promise<UserEntity> {
   const query = gql`
     ${USER_FIELDS}
     mutation CreateUser($createUserInput: CreateUserInput!) {
@@ -108,10 +134,7 @@ export interface UpdateUserInput {
   age?: number;
 }
 
-export async function updateUserMutation(
-  token: string,
-  input: UpdateUserInput,
-): Promise<UserEntity> {
+export async function updateUserMutation(token: string, input: UpdateUserInput): Promise<UserEntity> {
   const query = gql`
     ${USER_FIELDS}
     mutation UpdateUser($updateUserInput: UpdateUserInput!) {
@@ -121,11 +144,34 @@ export async function updateUserMutation(
     }
   `;
 
-  const data = await gqlRequest<{ updateUser: UserEntity }>(
-    query,
-    { updateUserInput: input },
-    token,
-  );
+  const data = await gqlRequest<{ updateUser: UserEntity }>(query, { updateUserInput: input }, token);
 
   return data.updateUser;
+}
+
+export interface UserAvatarInput {
+  key: string;
+  url: string;
+  originalFileName: string;
+  mimeType: string;
+  sizeBytes: number;
+}
+
+export async function updateAvatarMutation(token: string, input: UserAvatarInput): Promise<UserAvatarDetails> {
+  const query = gql`
+    mutation UpdateAvatar($input: UserAvatarInput!) {
+      updateAvatar(input: $input) {
+        id
+        key
+        url
+        originalFileName
+        mimeType
+        sizeBytes
+      }
+    }
+  `;
+
+  const data = await gqlRequest<{ updateAvatar: UserAvatarDetails }>(query, { input }, token);
+
+  return data.updateAvatar;
 }

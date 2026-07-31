@@ -1,27 +1,19 @@
-import clsx from "clsx";
-import { useEffect, useRef } from "react";
-import type { ReactNode } from "react";
+import clsx from 'clsx';
+import { useEffect, useRef } from 'react';
+import type { ReactNode } from 'react';
 
-const FOCUSABLE_SELECTOR =
-  'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
+const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
 interface ModalProps {
   open: boolean;
   onClose: () => void;
-  role?: "dialog" | "alertdialog";
+  role?: 'dialog' | 'alertdialog';
   ariaLabelledBy?: string;
   className?: string;
   children: ReactNode;
 }
 
-export function Modal({
-  open,
-  onClose,
-  role = "dialog",
-  ariaLabelledBy,
-  className,
-  children,
-}: ModalProps) {
+export function Modal({ open, onClose, role = 'dialog', ariaLabelledBy, className, children }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
 
@@ -36,17 +28,15 @@ export function Modal({
     (focusable?.[0] ?? panel)?.focus();
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         onClose();
         return;
       }
-      if (event.key !== "Tab" || !panel) {
+      if (event.key !== 'Tab' || !panel) {
         return;
       }
 
-      const focusableEls = Array.from(
-        panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
-      );
+      const focusableEls = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
       if (focusableEls.length === 0) {
         return;
       }
@@ -61,9 +51,9 @@ export function Modal({
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown);
       previouslyFocused.current?.focus();
     };
   }, [open, onClose]);
@@ -82,7 +72,7 @@ export function Modal({
         aria-labelledby={ariaLabelledBy}
         tabIndex={-1}
         className={clsx(
-          "relative bg-white rounded-2xl shadow-xl border border-slate-200 p-6 w-full max-w-sm outline-none",
+          'relative bg-white rounded-2xl shadow-xl border border-slate-200 p-6 w-full max-w-sm outline-none',
           className,
         )}
       >

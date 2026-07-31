@@ -1,11 +1,11 @@
-import { useState } from "react";
-import { Link, useFetcher } from "react-router";
+import { useState } from 'react';
+import { Link, useFetcher } from 'react-router';
 
-import { Icons } from "./Icons";
-import { ShareModal } from "./ShareModal";
-import { ConfirmDialog } from "./ConfirmDialog";
-import { Button, buttonStyles } from "./Button";
-import { paths } from "../lib/paths";
+import { Icons } from './Icons';
+import { ShareModal } from './ShareModal';
+import { ConfirmDialog } from './ConfirmDialog';
+import { Button, buttonStyles } from './Button';
+import { paths } from '../lib/paths';
 
 interface PostActionsBarProps {
   postId: string;
@@ -14,44 +14,25 @@ interface PostActionsBarProps {
   isOwner: boolean;
 }
 
-export function PostActionsBar({
-  postId,
-  postSlug,
-  postTitle,
-  isOwner,
-}: PostActionsBarProps) {
+export function PostActionsBar({ postId, postSlug, postTitle, isOwner }: PostActionsBarProps) {
   const [shareOpen, setShareOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const fetcher = useFetcher();
 
   return (
     <div className="flex items-center justify-between pt-4 border-t border-slate-100">
-      <Button
-        type="button"
-        variant="chip"
-        size="sm"
-        onClick={() => setShareOpen(true)}
-      >
+      <Button type="button" variant="chip" size="sm" onClick={() => setShareOpen(true)}>
         <Icons.Share />
         Share
       </Button>
 
       {isOwner && (
         <div className="flex items-center space-x-2">
-          <Link
-            to={paths.myPostEdit(postId)}
-            className={buttonStyles({ variant: "ghost", size: "sm" })}
-          >
+          <Link to={paths.myPostEdit(postId)} className={buttonStyles({ variant: 'ghost', size: 'sm' })}>
             <Icons.Edit />
             Edit
           </Link>
-          <Button
-            type="button"
-            variant="danger"
-            size="sm"
-            onClick={() => setConfirmOpen(true)}
-            title="Delete post"
-          >
+          <Button type="button" variant="danger" size="sm" onClick={() => setConfirmOpen(true)} title="Delete post">
             <Icons.Delete />
             <span className="ml-1">Delete</span>
           </Button>
@@ -75,7 +56,7 @@ export function PostActionsBar({
         onConfirm={() => {
           setConfirmOpen(false);
           fetcher.submit(null, {
-            method: "post",
+            method: 'post',
             action: paths.myPostDestroy(postId),
           });
         }}

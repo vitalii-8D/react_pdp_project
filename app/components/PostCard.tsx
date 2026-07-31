@@ -1,19 +1,13 @@
-import { Link } from "react-router";
+import { Link } from 'react-router';
 
-import { PostAuthorMeta } from "./PostAuthorMeta";
-import { CategoryList } from "./CategoryList";
-import { PostActionsBar } from "./PostActionsBar";
-import { Card } from "./Card";
-import { paths } from "../lib/paths";
-import type { PostEntity } from "../lib/types";
+import { PostAuthorMeta } from './PostAuthorMeta';
+import { CategoryList } from './CategoryList';
+import { PostActionsBar } from './PostActionsBar';
+import { Card } from './Card';
+import { paths } from '../lib/paths';
+import type { PostEntity } from '../lib/types';
 
-export function PostCard({
-  post,
-  currentUserId,
-}: {
-  post: PostEntity;
-  currentUserId?: string;
-}) {
+export function PostCard({ post, currentUserId }: { post: PostEntity; currentUserId?: string }) {
   const isOwner = post.author.id === currentUserId;
   const coverImage = post.openGraphMetadata?.image;
 
@@ -30,9 +24,7 @@ export function PostCard({
           )}
         </div>
 
-        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3 leading-tight">
-          {post.title}
-        </h2>
+        <h2 className="text-xl sm:text-2xl font-bold text-slate-900 mb-3 leading-tight">{post.title}</h2>
 
         {coverImage && (
           <img
@@ -42,19 +34,12 @@ export function PostCard({
           />
         )}
 
-        <p className="text-slate-600 whitespace-pre-line mb-4 leading-relaxed text-sm sm:text-base">
-          {post.content}
-        </p>
+        <p className="text-slate-600 whitespace-pre-line mb-4 leading-relaxed text-sm sm:text-base">{post.content}</p>
 
         <CategoryList categories={post.categories} />
       </Link>
 
-      <PostActionsBar
-        postId={post.id}
-        postSlug={post.slug}
-        postTitle={post.title}
-        isOwner={isOwner}
-      />
+      <PostActionsBar postId={post.id} postSlug={post.slug} postTitle={post.title} isOwner={isOwner} />
     </Card>
   );
 }

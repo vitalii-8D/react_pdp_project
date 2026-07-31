@@ -1,16 +1,22 @@
-import { useState } from "react";
-import { Form, Link } from "react-router";
+import { useState } from 'react';
+import { Form, Link } from 'react-router';
 
-import { formatSlug } from "../lib/format-slug";
-import { PostFormField } from "../enums/post-form-field.enum";
-import { cardClassName } from "./Card";
-import { TextField } from "./TextField";
-import { Button, buttonStyles } from "./Button";
-import type { CategoryEntity } from "../lib/types";
+import { formatSlug } from '../lib/format-slug';
+import { PostFormField } from '../enums/post-form-field.enum';
+import { UploadPurpose } from '../enums/upload-purpose.enum';
+import { cardClassName } from './Card';
+import { TextField } from './TextField';
+import { ImageUploadField } from './ImageUploadField';
+import { Button, buttonStyles } from './Button';
+import type { CategoryEntity } from '../lib/types';
 
-interface PostFormMetadataDefaultValues {
-  image: string;
-  imageAlt: string;
+interface PostFormImageDefaultValue {
+  key: string;
+  url: string;
+  mimeType: string;
+  sizeBytes: number;
+  originalFileName: string;
+  altText?: string;
 }
 
 interface PostFormDefaultValues {
@@ -19,7 +25,7 @@ interface PostFormDefaultValues {
   slug: string;
   published: boolean;
   categoryIds: string[];
-  metadata: Partial<PostFormMetadataDefaultValues>;
+  image?: PostFormImageDefaultValue;
 }
 
 interface PostFormProps {
@@ -31,25 +37,13 @@ interface PostFormProps {
   submitLabel: string;
 }
 
-export function PostForm({
-  categories,
-  defaultValues,
-  error,
-  pending,
-  cancelTo,
-  submitLabel,
-}: PostFormProps) {
-  const [slug, setSlug] = useState(
-    defaultValues?.slug ?? formatSlug(defaultValues?.title ?? ""),
-  );
+export function PostForm({ categories, defaultValues, error, pending, cancelTo, submitLabel }: PostFormProps) {
+  const [slug, setSlug] = useState(defaultValues?.slug ?? formatSlug(defaultValues?.title ?? ''));
+  const [imageUploading, setImageUploading] = useState(false);
 
   return (
     <Form method="post" className={`${cardClassName} p-6 sm:p-8 space-y-5`}>
-      {error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">
-          {error}
-        </p>
-      )}
+      {error && <p className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-xl px-4 py-3">{error}</p>}
 
       <TextField
         id="title"
@@ -74,10 +68,7 @@ export function PostForm({
       />
 
       <div>
-        <label
-          htmlFor="content"
-          className="block text-sm font-semibold text-slate-700 mb-1.5"
-        >
+        <label htmlFor="content" className="block text-sm font-semibold text-slate-700 mb-1.5">
           Content
         </label>
         <textarea
@@ -90,28 +81,29 @@ export function PostForm({
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <TextField
-          id="image"
-          label="Image URL"
-          name={PostFormField.Image}
-          type="url"
-          defaultValue={defaultValues?.metadata?.image}
-        />
-        <TextField
-          id="imageAlt"
-          label="Image alt text"
-          name={PostFormField.ImageAlt}
-          type="text"
-          defaultValue={defaultValues?.metadata?.imageAlt}
-        />
-      </div>
+      <ImageUploadField
+        purpose={UploadPurpose.PostImage}
+        label="Cover image"
+        hint="JPEG, PNG, WebP or GIF, up to 5MB."
+        fieldNames={{
+          key: PostFormField.ImageKey,
+          url: PostFormField.ImageUrl,
+          mimeType: PostFormField.ImageMimeType,
+          sizeBytes: PostFormField.ImageSizeBytes,
+          originalFileName: PostFormField.ImageOriginalFileName,
+        }}
+        altTextField={{
+          name: PostFormField.ImageAlt,
+          label: 'Image alt text',
+          defaultValue: defaultValues?.image?.altText,
+        }}
+        defaultValue={defaultValues?.image}
+        onUploadingChange={setImageUploading}
+      />
 
       {categories.length > 0 && (
         <div>
-          <span className="block text-sm font-semibold text-slate-700 mb-1.5">
-            Categories
-          </span>
+          <span className="block text-sm font-semibold text-slate-700 mb-1.5">Categories</span>
           <div className="flex flex-wrap gap-2">
             {categories.map((category) => (
               <label
@@ -122,9 +114,7 @@ export function PostForm({
                   type="checkbox"
                   name={PostFormField.CategoryIds}
                   value={category.id}
-                  defaultChecked={defaultValues?.categoryIds?.includes(
-                    category.id,
-                  )}
+                  defaultChecked={defaultValues?.categoryIds?.includes(category.id)}
                   className="mr-2"
                 />
                 {category.name}
@@ -146,11 +136,11 @@ export function PostForm({
       </label>
 
       <div className="flex items-center justify-end space-x-3 pt-2">
-        <Link to={cancelTo} className={buttonStyles({ variant: "secondary" })}>
+        <Link to={cancelTo} className={buttonStyles({ variant: 'secondary' })}>
           Cancel
         </Link>
-        <Button type="submit" disabled={pending} size="lg">
-          {pending ? "Saving…" : submitLabel}
+        <Button type="submit" disabled={pending || imageUploading} size="lg">
+          {pending ? 'Saving…' : submitLabel}
         </Button>
       </div>
     </Form>

@@ -1,8 +1,8 @@
-import { Link } from "react-router";
-import type { ReactNode } from "react";
+import { Link } from 'react-router';
+import type { ReactNode } from 'react';
 
-import { LogoMark } from "./LogoMark";
-import { safeRedirectPath } from "../lib/safe-redirect";
+import { LogoMark } from './LogoMark';
+import { safeRedirectPath } from '../lib/safe-redirect';
 
 interface AuthLayoutProps {
   heading: string;
@@ -12,13 +12,7 @@ interface AuthLayoutProps {
   children: ReactNode;
 }
 
-export function AuthLayout({
-  heading,
-  subtitle,
-  from,
-  switchPrompt,
-  children,
-}: AuthLayoutProps) {
+export function AuthLayout({ heading, subtitle, from, switchPrompt, children }: AuthLayoutProps) {
   const backTo = safeRedirectPath(from);
 
   return (
@@ -32,15 +26,10 @@ export function AuthLayout({
 
         {children}
 
-        <p className="text-center text-sm text-slate-500 mt-6">
-          {switchPrompt}
-        </p>
+        <p className="text-center text-sm text-slate-500 mt-6">{switchPrompt}</p>
 
         <p className="text-center text-sm mt-4">
-          <Link
-            to={backTo}
-            className="text-slate-500 font-semibold hover:text-slate-700 hover:underline"
-          >
+          <Link to={backTo} className="text-slate-500 font-semibold hover:text-slate-700 hover:underline">
             ← Back
           </Link>
         </p>

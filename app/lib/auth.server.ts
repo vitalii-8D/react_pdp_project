@@ -1,17 +1,13 @@
-import { redirect } from "react-router";
+import { redirect } from 'react-router';
 
-import {
-  getSession,
-  destroySession,
-  SESSION_TOKEN_KEY,
-} from "./sessions.server";
-import { meQuery } from "./graphql/users.server";
-import { GqlRequestError } from "./graphql-client.server";
-import { paths } from "./paths";
-import type { UserEntity } from "./types";
+import { getSession, destroySession, SESSION_TOKEN_KEY } from './sessions.server';
+import { meQuery } from './graphql/users.server';
+import { GqlRequestError } from './graphql-client.server';
+import { paths } from './paths';
+import type { UserEntity } from './types';
 
 export async function getToken(request: Request): Promise<string | undefined> {
-  const session = await getSession(request.headers.get("Cookie"));
+  const session = await getSession(request.headers.get('Cookie'));
 
   return session.get(SESSION_TOKEN_KEY);
 }
@@ -25,9 +21,7 @@ export async function requireToken(request: Request): Promise<string> {
   return token;
 }
 
-export async function getOptionalUser(
-  request: Request,
-): Promise<{ token?: string; user?: UserEntity }> {
+export async function getOptionalUser(request: Request): Promise<{ token?: string; user?: UserEntity }> {
   const token = await getToken(request);
   if (!token) {
     return {};
@@ -44,9 +38,7 @@ export async function getOptionalUser(
   }
 }
 
-export async function requireUser(
-  request: Request,
-): Promise<{ token: string; user: UserEntity }> {
+export async function requireUser(request: Request): Promise<{ token: string; user: UserEntity }> {
   const token = await requireToken(request);
 
   try {
@@ -54,9 +46,9 @@ export async function requireUser(
     return { token, user };
   } catch (error) {
     if (error instanceof GqlRequestError && error.status === 401) {
-      const session = await getSession(request.headers.get("Cookie"));
+      const session = await getSession(request.headers.get('Cookie'));
       throw redirect(paths.login(), {
-        headers: { "Set-Cookie": await destroySession(session) },
+        headers: { 'Set-Cookie': await destroySession(session) },
       });
     }
     throw error;

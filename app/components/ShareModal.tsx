@@ -1,11 +1,11 @@
-import { useEffect, useState } from "react";
-import { useFetcher } from "react-router";
-import { SocialPlatform } from "../enums/social-platform.enum";
+import { useEffect, useState } from 'react';
+import { useFetcher } from 'react-router';
+import { SocialPlatform } from '../enums/social-platform.enum';
 
-import { Icons } from "./Icons";
-import { Modal } from "./Modal";
-import { paths } from "../lib/paths";
-import type { ShareLinks } from "../lib/types";
+import { Icons } from './Icons';
+import { Modal } from './Modal';
+import { paths } from '../lib/paths';
+import type { ShareLinks } from '../lib/types';
 
 const COPY_FEEDBACK_MS = 1500;
 
@@ -19,69 +19,56 @@ interface ShareModalProps {
 
 type ShareLinksResponse = { shareLinks: ShareLinks } | { error: string };
 
-export function ShareModal({
-  postId,
-  postSlug,
-  postTitle,
-  open,
-  onClose,
-}: ShareModalProps) {
+export function ShareModal({ postId, postSlug, postTitle, open, onClose }: ShareModalProps) {
   const fetcher = useFetcher<ShareLinksResponse>();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
   useEffect(() => {
-    if (open && fetcher.state === "idle" && !fetcher.data) {
+    if (open && fetcher.state === 'idle' && !fetcher.data) {
       fetcher.load(paths.postShareLinks(postId, postSlug));
     }
     // fetcher identity changes every render by design; only re-run on open/postId change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, postId, postSlug]);
 
-  const shareLinks =
-    fetcher.data && "shareLinks" in fetcher.data
-      ? fetcher.data.shareLinks
-      : undefined;
-  const errorMsg =
-    fetcher.data && "error" in fetcher.data ? fetcher.data.error : undefined;
+  const shareLinks = fetcher.data && 'shareLinks' in fetcher.data ? fetcher.data.shareLinks : undefined;
+  const errorMsg = fetcher.data && 'error' in fetcher.data ? fetcher.data.error : undefined;
 
   const copy = async (url: string, key: string) => {
     await navigator.clipboard.writeText(url);
     setCopiedKey(key);
-    setTimeout(
-      () => setCopiedKey((current) => (current === key ? null : current)),
-      COPY_FEEDBACK_MS,
-    );
+    setTimeout(() => setCopiedKey((current) => (current === key ? null : current)), COPY_FEEDBACK_MS);
   };
 
   const platforms = shareLinks
     ? [
         {
           key: SocialPlatform.Facebook,
-          label: "Facebook",
+          label: 'Facebook',
           url: shareLinks.facebook,
           Icon: Icons.Facebook,
         },
         {
           key: SocialPlatform.Twitter,
-          label: "Twitter / X",
+          label: 'Twitter / X',
           url: shareLinks.twitter,
           Icon: Icons.Twitter,
         },
         {
           key: SocialPlatform.LinkedIn,
-          label: "LinkedIn",
+          label: 'LinkedIn',
           url: shareLinks.linkedin,
           Icon: Icons.LinkedIn,
         },
         {
           key: SocialPlatform.Telegram,
-          label: "Telegram",
+          label: 'Telegram',
           url: shareLinks.telegram,
           Icon: Icons.Telegram,
         },
         {
           key: SocialPlatform.Whatsapp,
-          label: "Whatsapp",
+          label: 'Whatsapp',
           url: shareLinks.whatsapp,
           Icon: Icons.Whatsapp,
         },
@@ -102,12 +89,10 @@ export function ShareModal({
       <h3 id="share-modal-title" className="text-lg font-black text-slate-900">
         Share This Post
       </h3>
-      <p className="text-xs text-slate-400 mt-0.5 truncate">
-        &quot;{postTitle}&quot;
-      </p>
+      <p className="text-xs text-slate-400 mt-0.5 truncate">&quot;{postTitle}&quot;</p>
 
       <div className="mt-5 space-y-3">
-        {fetcher.state !== "idle" && !shareLinks && !errorMsg && (
+        {fetcher.state !== 'idle' && !shareLinks && !errorMsg && (
           <p className="text-sm text-slate-400">Loading share links…</p>
         )}
         {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
@@ -137,11 +122,7 @@ export function ShareModal({
                 title="Copy link"
               >
                 <Icons.Copy />
-                {copiedKey === key && (
-                  <span className="text-[10px] font-bold text-blue-600 ml-0.5">
-                    Copied
-                  </span>
-                )}
+                {copiedKey === key && <span className="text-[10px] font-bold text-blue-600 ml-0.5">Copied</span>}
               </button>
             </div>
           </div>

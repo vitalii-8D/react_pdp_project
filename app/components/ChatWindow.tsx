@@ -1,10 +1,10 @@
-import { useEffect, useRef, useState, type FormEvent } from "react";
-import { io, type Socket } from "socket.io-client";
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { io, type Socket } from 'socket.io-client';
 
-import { ChatSocketEvent } from "../enums/chat-socket-event.enum";
-import type { ChatMessageEntity, ChatRoomEntity } from "../lib/types";
-import { Button } from "./Button";
-import { Card } from "./Card";
+import { ChatSocketEvent } from '../enums/chat-socket-event.enum';
+import type { ChatMessageEntity, ChatRoomEntity } from '../lib/types';
+import { Button } from './Button';
+import { Card } from './Card';
 
 interface JoinedRoomPayload {
   room: ChatRoomEntity;
@@ -46,14 +46,13 @@ export function ChatWindow({
   const displayName = otherParticipant?.name ?? room.name;
 
   const socketRef = useRef<Socket | null>(null);
-  const [messages, setMessages] =
-    useState<ChatMessageEntity[]>(initialMessages);
+  const [messages, setMessages] = useState<ChatMessageEntity[]>(initialMessages);
   const [connected, setConnected] = useState(false);
   const [presence, setPresence] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [draft, setDraft] = useState("");
+  const [draft, setDraft] = useState('');
   const [sending, setSending] = useState(false);
-  const [broadcastDraft, setBroadcastDraft] = useState("");
+  const [broadcastDraft, setBroadcastDraft] = useState('');
   const [broadcasting, setBroadcasting] = useState(false);
 
   useEffect(() => {
@@ -62,8 +61,8 @@ export function ChatWindow({
     });
     socketRef.current = socket;
 
-    socket.on("connect", () => setConnected(true));
-    socket.on("disconnect", () => setConnected(false));
+    socket.on('connect', () => setConnected(true));
+    socket.on('disconnect', () => setConnected(false));
 
     return () => {
       socket.disconnect();
@@ -95,11 +94,11 @@ export function ChatWindow({
     };
     const handleMessageSent = () => {
       setSending(false);
-      setDraft("");
+      setDraft('');
     };
     const handleBroadcastSent = () => {
       setBroadcasting(false);
-      setBroadcastDraft("");
+      setBroadcastDraft('');
     };
     const handleError = (payload: ErrorPayload) => {
       setSending(false);
@@ -163,66 +162,49 @@ export function ChatWindow({
     <div className="h-full flex flex-col gap-4">
       <div className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900">
-            {displayName}
-          </h1>
-          {!room.isDirect && room.description && (
-            <p className="text-slate-500 text-sm mt-0.5">{room.description}</p>
-          )}
+          <h1 className="text-2xl font-black tracking-tight text-slate-900">{displayName}</h1>
+          {!room.isDirect && room.description && <p className="text-slate-500 text-sm mt-0.5">{room.description}</p>}
           {room.isDirect && otherParticipant && (
-            <p className="text-slate-500 text-sm mt-0.5">
-              {otherParticipant.email}
-            </p>
+            <p className="text-slate-500 text-sm mt-0.5">{otherParticipant.email}</p>
           )}
         </div>
         <span
           className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
             connected
-              ? "bg-green-50 text-green-700 border border-green-100"
-              : "bg-slate-100 text-slate-500 border border-slate-200"
+              ? 'bg-green-50 text-green-700 border border-green-100'
+              : 'bg-slate-100 text-slate-500 border border-slate-200'
           }`}
         >
-          {connected ? "Connected" : "Connecting..."}
+          {connected ? 'Connected' : 'Connecting...'}
         </span>
       </div>
 
-      {presence && (
-        <p className="text-xs text-slate-400 shrink-0">{presence}</p>
-      )}
+      {presence && <p className="text-xs text-slate-400 shrink-0">{presence}</p>}
       {error && <p className="text-sm text-red-600 shrink-0">{error}</p>}
 
       <Card className="p-4 flex-1 min-h-0 overflow-y-auto flex flex-col gap-3">
         {messages.length === 0 ? (
-          <p className="text-slate-400 text-sm m-auto">
-            No messages yet. Say hello!
-          </p>
+          <p className="text-slate-400 text-sm m-auto">No messages yet. Say hello!</p>
         ) : (
           messages.map((message) => {
             const isOwn = message.userId === currentUserId;
             return (
-              <div
-                key={message.id}
-                className={`flex flex-col ${isOwn ? "items-end" : "items-start"}`}
-              >
+              <div key={message.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
                 <div
                   className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
                     message.isAdminBroadcast
-                      ? "bg-amber-50 text-amber-900 border border-amber-200"
+                      ? 'bg-amber-50 text-amber-900 border border-amber-200'
                       : isOwn
-                        ? "bg-blue-50 text-blue-900 border border-blue-100"
-                        : "bg-slate-100 text-slate-800"
+                        ? 'bg-blue-50 text-blue-900 border border-blue-100'
+                        : 'bg-slate-100 text-slate-800'
                   }`}
                 >
                   {message.isAdminBroadcast && (
-                    <p className="text-xs font-bold uppercase tracking-wide mb-1">
-                      Announcement
-                    </p>
+                    <p className="text-xs font-bold uppercase tracking-wide mb-1">Announcement</p>
                   )}
                   <p>{message.message}</p>
                 </div>
-                <span className="text-xs text-slate-400 mt-1">
-                  {isOwn ? "You" : message.user.name}
-                </span>
+                <span className="text-xs text-slate-400 mt-1">{isOwn ? 'You' : message.user.name}</span>
               </div>
             );
           })
@@ -243,9 +225,7 @@ export function ChatWindow({
 
       {isAdmin && !room.isDirect && (
         <Card className="p-4 space-y-2 bg-amber-50/50 border-amber-200 shrink-0">
-          <p className="text-sm font-bold text-amber-900">
-            Broadcast to all rooms
-          </p>
+          <p className="text-sm font-bold text-amber-900">Broadcast to all rooms</p>
           <form onSubmit={handleBroadcast} className="flex gap-2">
             <input
               value={broadcastDraft}
@@ -253,11 +233,7 @@ export function ChatWindow({
               placeholder="Announcement message..."
               className="flex-grow rounded-xl border border-amber-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
             />
-            <Button
-              type="submit"
-              variant="secondary"
-              disabled={broadcasting || !broadcastDraft.trim()}
-            >
+            <Button type="submit" variant="secondary" disabled={broadcasting || !broadcastDraft.trim()}>
               Broadcast
             </Button>
           </form>

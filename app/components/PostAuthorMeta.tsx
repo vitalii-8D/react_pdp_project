@@ -1,6 +1,6 @@
-import { avatarUrl } from "../lib/images";
-import { formatDate } from "../lib/format";
-import type { UserEntity } from "../lib/types";
+import { avatarUrl } from '../lib/images';
+import { formatDate } from '../lib/format';
+import type { UserEntity } from '../lib/types';
 
 interface PostAuthorMetaProps {
   author: UserEntity;
@@ -12,7 +12,7 @@ export function PostAuthorMeta({ author, createdAt }: PostAuthorMetaProps) {
     <div className="flex items-center space-x-3">
       <img
         className="h-10 w-10 rounded-full object-cover ring-2 ring-slate-100"
-        src={avatarUrl(author.id)}
+        src={author.avatar?.url ?? avatarUrl(author.id)}
         alt={author.name}
       />
       <div>

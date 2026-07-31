@@ -1,16 +1,16 @@
-import { Link } from "react-router";
+import { Link } from 'react-router';
 
-import type { Route } from "./+types/posts.$postId.$slug";
-import { getOptionalUser } from "../../lib/auth.server";
-import { postQuery } from "../../lib/graphql/posts.server";
-import { Icons } from "../../components/Icons";
-import { PostAuthorMeta } from "../../components/PostAuthorMeta";
-import { CategoryList } from "../../components/CategoryList";
-import { PostActionsBar } from "../../components/PostActionsBar";
-import { Card } from "../../components/Card";
-import { getSiteUrl } from "../../lib/site-url.server";
-import { paths } from "../../lib/paths";
-import { buildOgMetaTags } from "../../lib/meta";
+import type { Route } from './+types/posts.$postId.$slug';
+import { getOptionalUser } from '../../lib/auth.server';
+import { postQuery } from '../../lib/graphql/posts.server';
+import { Icons } from '../../components/Icons';
+import { PostAuthorMeta } from '../../components/PostAuthorMeta';
+import { CategoryList } from '../../components/CategoryList';
+import { PostActionsBar } from '../../components/PostActionsBar';
+import { Card } from '../../components/Card';
+import { getSiteUrl } from '../../lib/site-url.server';
+import { paths } from '../../lib/paths';
+import { buildOgMetaTags } from '../../lib/meta';
 
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { token, user } = await getOptionalUser(request);
@@ -56,18 +56,11 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
           />
         )}
 
-        <p className="text-slate-600 whitespace-pre-line mb-6 leading-relaxed">
-          {post.content}
-        </p>
+        <p className="text-slate-600 whitespace-pre-line mb-6 leading-relaxed">{post.content}</p>
 
         <CategoryList categories={post.categories} />
 
-        <PostActionsBar
-          postId={post.id}
-          postSlug={post.slug}
-          postTitle={post.title}
-          isOwner={isOwner}
-        />
+        <PostActionsBar postId={post.id} postSlug={post.slug} postTitle={post.title} isOwner={isOwner} />
       </Card>
     </div>
   );

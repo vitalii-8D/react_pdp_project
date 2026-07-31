@@ -1,6 +1,11 @@
-import { SocialPlatform } from "../enums/social-platform.enum";
-import { UserRole } from "../enums/user-role.enum";
-import { OgType } from "../enums/og-type.enum";
+import { SocialPlatform } from '../enums/social-platform.enum';
+import { UserRole } from '../enums/user-role.enum';
+import { OgType } from '../enums/og-type.enum';
+
+export interface UserAvatarEntity {
+  id: string;
+  url: string;
+}
 
 export interface UserEntity {
   id: string;
@@ -9,6 +14,7 @@ export interface UserEntity {
   age?: number | null;
   role: UserRole;
   posts?: PostEntity[] | null;
+  avatar?: UserAvatarEntity | null;
 }
 
 export interface CategoryEntity {
@@ -39,6 +45,16 @@ export interface OpenGraphMetadataEntity {
   twitterCreator?: string | null;
 }
 
+export interface PostImageEntity {
+  id: string;
+  key: string;
+  url: string;
+  originalFileName: string;
+  mimeType: string;
+  sizeBytes: number;
+  altText?: string | null;
+}
+
 export interface PostEntity {
   id: string;
   title: string;
@@ -51,6 +67,7 @@ export interface PostEntity {
   author: UserEntity;
   categories?: CategoryEntity[] | null;
   openGraphMetadata?: OpenGraphMetadataEntity | null;
+  postImage?: PostImageEntity | null;
 }
 
 export interface ShareLinks {

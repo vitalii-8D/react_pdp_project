@@ -1,5 +1,5 @@
-import { Modal } from "./Modal";
-import { Button } from "./Button";
+import { Modal } from './Modal';
+import { Button } from './Button';
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -14,21 +14,13 @@ export function ConfirmDialog({
   open,
   title,
   message,
-  confirmLabel = "Delete",
+  confirmLabel = 'Delete',
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) {
   return (
-    <Modal
-      open={open}
-      onClose={onCancel}
-      role="alertdialog"
-      ariaLabelledBy="confirm-dialog-title"
-    >
-      <h3
-        id="confirm-dialog-title"
-        className="text-lg font-bold text-slate-900"
-      >
+    <Modal open={open} onClose={onCancel} role="alertdialog" ariaLabelledBy="confirm-dialog-title">
+      <h3 id="confirm-dialog-title" className="text-lg font-bold text-slate-900">
         {title}
       </h3>
       <p className="text-sm text-slate-500 mt-2">{message}</p>

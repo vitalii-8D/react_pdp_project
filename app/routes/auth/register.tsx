@@ -1,44 +1,29 @@
-import {
-  data,
-  redirect,
-  Form,
-  Link,
-  useNavigation,
-  useSearchParams,
-} from "react-router";
+import { data, redirect, Form, Link, useNavigation, useSearchParams } from 'react-router';
 
-import type { Route } from "./+types/register";
-import {
-  getSession,
-  commitSession,
-  destroySession,
-  SESSION_TOKEN_KEY,
-} from "../../lib/sessions.server";
-import {
-  createUserMutation,
-  loginMutation,
-} from "../../lib/graphql/users.server";
-import { toActionError } from "../../lib/graphql-client.server";
-import { getOptionalUser } from "../../lib/auth.server";
-import { safeRedirectPath } from "../../lib/safe-redirect";
-import { AuthFormField } from "../../enums/auth-form-field.enum";
-import { paths } from "../../lib/paths";
-import { AuthLayout } from "../../components/AuthLayout";
-import { TextField } from "../../components/TextField";
-import { Button } from "../../components/Button";
-import { cardClassName } from "../../components/Card";
+import type { Route } from './+types/register';
+import { getSession, commitSession, destroySession, SESSION_TOKEN_KEY } from '../../lib/sessions.server';
+import { createUserMutation, loginMutation } from '../../lib/graphql/users.server';
+import { toActionError } from '../../lib/graphql-client.server';
+import { getOptionalUser } from '../../lib/auth.server';
+import { safeRedirectPath } from '../../lib/safe-redirect';
+import { AuthFormField } from '../../enums/auth-form-field.enum';
+import { paths } from '../../lib/paths';
+import { AuthLayout } from '../../components/AuthLayout';
+import { TextField } from '../../components/TextField';
+import { Button } from '../../components/Button';
+import { cardClassName } from '../../components/Card';
 
 export async function loader({ request }: Route.LoaderArgs) {
   const { user } = await getOptionalUser(request);
   if (user) {
-    const from = new URL(request.url).searchParams.get("from");
+    const from = new URL(request.url).searchParams.get('from');
     throw redirect(safeRedirectPath(from));
   }
 
-  const session = await getSession(request.headers.get("Cookie"));
+  const session = await getSession(request.headers.get('Cookie'));
   if (session.has(SESSION_TOKEN_KEY)) {
     return data(null, {
-      headers: { "Set-Cookie": await destroySession(session) },
+      headers: { 'Set-Cookie': await destroySession(session) },
     });
   }
 
@@ -47,33 +32,33 @@ export async function loader({ request }: Route.LoaderArgs) {
 
 export async function action({ request }: Route.ActionArgs) {
   const formData = await request.formData();
-  const name = String(formData.get(AuthFormField.Name) ?? "");
-  const email = String(formData.get(AuthFormField.Email) ?? "");
-  const password = String(formData.get(AuthFormField.Password) ?? "");
-  const ageRaw = String(formData.get(AuthFormField.Age) ?? "");
+  const name = String(formData.get(AuthFormField.Name) ?? '');
+  const email = String(formData.get(AuthFormField.Email) ?? '');
+  const password = String(formData.get(AuthFormField.Password) ?? '');
+  const ageRaw = String(formData.get(AuthFormField.Age) ?? '');
   const age = ageRaw ? Number(ageRaw) : undefined;
-  const from = safeRedirectPath(String(formData.get(AuthFormField.From) ?? ""));
+  const from = safeRedirectPath(String(formData.get(AuthFormField.From) ?? ''));
 
   try {
     await createUserMutation({ name, email, password, age });
     // createUser doesn't return a token, so log in immediately after registering.
     const { accessToken } = await loginMutation(email, password);
-    const session = await getSession(request.headers.get("Cookie"));
+    const session = await getSession(request.headers.get('Cookie'));
     session.set(SESSION_TOKEN_KEY, accessToken);
 
     return redirect(from, {
-      headers: { "Set-Cookie": await commitSession(session) },
+      headers: { 'Set-Cookie': await commitSession(session) },
     });
   } catch (error) {
-    return toActionError(error, "Something went wrong. Please try again.");
+    return toActionError(error, 'Something went wrong. Please try again.');
   }
 }
 
 export default function Register({ actionData }: Route.ComponentProps) {
   const navigation = useNavigation();
-  const pending = navigation.state === "submitting";
+  const pending = navigation.state === 'submitting';
   const [searchParams] = useSearchParams();
-  const from = searchParams.get("from") ?? "";
+  const from = searchParams.get('from') ?? '';
 
   return (
     <AuthLayout
@@ -82,11 +67,8 @@ export default function Register({ actionData }: Route.ComponentProps) {
       from={from}
       switchPrompt={
         <>
-          Already have an account?{" "}
-          <Link
-            to={paths.login(from)}
-            className="text-blue-600 font-semibold hover:underline"
-          >
+          Already have an account?{' '}
+          <Link to={paths.login(from)} className="text-blue-600 font-semibold hover:underline">
             Sign in
           </Link>
         </>
@@ -99,22 +81,8 @@ export default function Register({ actionData }: Route.ComponentProps) {
             {actionData.error}
           </p>
         )}
-        <TextField
-          id="name"
-          label="Name"
-          name={AuthFormField.Name}
-          type="text"
-          required
-          autoComplete="name"
-        />
-        <TextField
-          id="email"
-          label="Email"
-          name={AuthFormField.Email}
-          type="email"
-          required
-          autoComplete="email"
-        />
+        <TextField id="name" label="Name" name={AuthFormField.Name} type="text" required autoComplete="name" />
+        <TextField id="email" label="Email" name={AuthFormField.Email} type="email" required autoComplete="email" />
         <TextField
           id="password"
           label="Password"
@@ -126,15 +94,13 @@ export default function Register({ actionData }: Route.ComponentProps) {
         <TextField
           id="age"
           label="Age"
-          labelSuffix={
-            <span className="text-slate-400 font-normal">(optional)</span>
-          }
+          labelSuffix={<span className="text-slate-400 font-normal">(optional)</span>}
           name={AuthFormField.Age}
           type="number"
           min={0}
         />
         <Button type="submit" disabled={pending} size="lg" className="w-full">
-          {pending ? "Creating account…" : "Sign up"}
+          {pending ? 'Creating account…' : 'Sign up'}
         </Button>
       </Form>
     </AuthLayout>

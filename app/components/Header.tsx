@@ -1,12 +1,12 @@
-import { Form, Link, useLocation } from "react-router";
+import { Form, Link, useLocation } from 'react-router';
 
-import { Icons } from "./Icons";
-import { LogoMark } from "./LogoMark";
-import { NavLink } from "./NavLink";
-import { buttonStyles } from "./Button";
-import { avatarUrl } from "../lib/images";
-import { paths } from "../lib/paths";
-import type { UserEntity } from "../lib/types";
+import { Icons } from './Icons';
+import { LogoMark } from './LogoMark';
+import { NavLink } from './NavLink';
+import { buttonStyles } from './Button';
+import { avatarUrl } from '../lib/images';
+import { paths } from '../lib/paths';
+import type { UserEntity } from '../lib/types';
 
 export function Header({ user }: { user?: UserEntity }) {
   const location = useLocation();
@@ -19,10 +19,7 @@ export function Header({ user }: { user?: UserEntity }) {
     <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-sm">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16 items-center">
-          <Link
-            to={paths.posts()}
-            className="flex items-center space-x-3 group"
-          >
+          <Link to={paths.posts()} className="flex items-center space-x-3 group">
             <LogoMark className="transition-transform group-hover:scale-105" />
             <span className="text-xl font-bold tracking-tight text-slate-900 group-hover:text-blue-600 transition-colors">
               PostShare
@@ -59,7 +56,7 @@ export function Header({ user }: { user?: UserEntity }) {
                   >
                     <img
                       className="h-9 w-9 rounded-full object-cover ring-2 ring-transparent group-hover:ring-blue-500 transition-all duration-200"
-                      src={avatarUrl(user.id)}
+                      src={user.avatar?.url ?? avatarUrl(user.id)}
                       alt={user.name}
                     />
                     <span className="hidden lg:block text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors">

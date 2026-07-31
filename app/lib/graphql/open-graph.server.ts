@@ -1,8 +1,8 @@
-import { gql } from "graphql-request";
-import { SocialPlatform } from "../../enums/social-platform.enum";
+import { gql } from 'graphql-request';
+import { SocialPlatform } from '../../enums/social-platform.enum';
 
-import { gqlRequest } from "../graphql-client.server";
-import type { ShareLinks } from "../types";
+import { gqlRequest } from '../graphql-client.server';
+import type { ShareLinks } from '../types';
 
 export async function generateShareLinksQuery(
   token: string | undefined,
@@ -20,10 +20,6 @@ export async function generateShareLinksQuery(
       }
     }
   `;
-  const data = await gqlRequest<{ generateShareLinks: ShareLinks }>(
-    query,
-    { url, postId },
-    token,
-  );
+  const data = await gqlRequest<{ generateShareLinks: ShareLinks }>(query, { url, postId }, token);
   return data.generateShareLinks;
 }

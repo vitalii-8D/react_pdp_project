@@ -1,14 +1,7 @@
-import {
-  MetaProperty,
-  MetaName,
-  TwitterCardType,
-} from "../enums/meta-tag.enum";
-import type { PostEntity } from "./types";
+import { MetaProperty, MetaName, TwitterCardType } from '../enums/meta-tag.enum';
+import type { PostEntity } from './types';
 
-export function buildOgMetaTags(
-  post: PostEntity,
-  url: string,
-): Array<Record<string, string>> {
+export function buildOgMetaTags(post: PostEntity, url: string): Array<Record<string, string>> {
   const og = post.openGraphMetadata;
   const title = og?.title ?? post.title;
   const description = og?.description ?? post.content.slice(0, 160);
@@ -18,7 +11,7 @@ export function buildOgMetaTags(
     { name: MetaName.Description, content: description },
     { property: MetaProperty.OgTitle, content: title },
     { property: MetaProperty.OgDescription, content: description },
-    { property: MetaProperty.OgType, content: "article" },
+    { property: MetaProperty.OgType, content: 'article' },
     { property: MetaProperty.OgUrl, content: url },
   ];
 
@@ -35,9 +28,7 @@ export function buildOgMetaTags(
 
   tags.push({
     name: MetaName.TwitterCard,
-    content: og?.image
-      ? TwitterCardType.SummaryLargeImage
-      : TwitterCardType.Summary,
+    content: og?.image ? TwitterCardType.SummaryLargeImage : TwitterCardType.Summary,
   });
   tags.push({ name: MetaName.TwitterTitle, content: title });
   tags.push({ name: MetaName.TwitterDescription, content: description });

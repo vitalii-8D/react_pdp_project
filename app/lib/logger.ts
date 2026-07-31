@@ -1,12 +1,10 @@
-import winston from "winston";
+import winston from 'winston';
 
-const prettyPrint = process.env.LOG_PRETTY_PRINT === "true";
-const logLevel = process.env.LOG_LEVEL ?? "debug";
+const prettyPrint = process.env.LOG_PRETTY_PRINT === 'true';
+const logLevel = process.env.LOG_LEVEL ?? 'debug';
 
-export const createLogger = (context = "Logger") => {
-  const transportFormat = prettyPrint
-    ? winston.format.prettyPrint({ colorize: true })
-    : winston.format.json();
+export const createLogger = (context = 'Logger') => {
+  const transportFormat = prettyPrint ? winston.format.prettyPrint({ colorize: true }) : winston.format.json();
 
   return winston.createLogger({
     format: winston.format.combine(

@@ -1,25 +1,20 @@
-import clsx from "clsx";
+import clsx from 'clsx';
 
 interface LogoMarkProps {
-  size?: "sm" | "lg";
+  size?: 'sm' | 'lg';
   className?: string;
 }
 
-export function LogoMark({ size = "sm", className }: LogoMarkProps) {
+export function LogoMark({ size = 'sm', className }: LogoMarkProps) {
   return (
     <div
       className={clsx(
-        "rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-100",
-        size === "sm" ? "h-10 w-10" : "h-12 w-12",
+        'rounded-xl bg-blue-600 flex items-center justify-center text-white shadow-md shadow-blue-100',
+        size === 'sm' ? 'h-10 w-10' : 'h-12 w-12',
         className,
       )}
     >
-      <svg
-        className={size === "sm" ? "w-6 h-6" : "w-7 h-7"}
-        fill="none"
-        stroke="currentColor"
-        viewBox="0 0 24 24"
-      >
+      <svg className={size === 'sm' ? 'w-6 h-6' : 'w-7 h-7'} fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path
           strokeLinecap="round"
           strokeLinejoin="round"
