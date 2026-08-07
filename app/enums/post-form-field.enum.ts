@@ -2,7 +2,7 @@ export enum PostFormField {
   Title = 'title',
   Content = 'content',
   Slug = 'slug',
-  Published = 'published',
+  Status = 'status',
   CategoryIds = 'categoryIds',
   ImageKey = 'imageKey',
   ImageUrl = 'imageUrl',

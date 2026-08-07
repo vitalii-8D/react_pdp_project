@@ -2,11 +2,14 @@ import { Link } from 'react-router';
 
 import type { Route } from './+types/posts.$postId.$slug';
 import { getOptionalUser } from '../../lib/auth.server';
-import { postQuery } from '../../lib/graphql/posts.server';
+import { postQuery, incrementPostViewCountMutation } from '../../lib/graphql/posts.server';
+import { commentsByPostQuery } from '../../lib/graphql/comments.server';
 import { Icons } from '../../components/Icons';
 import { PostAuthorMeta } from '../../components/PostAuthorMeta';
 import { CategoryList } from '../../components/CategoryList';
 import { PostActionsBar } from '../../components/PostActionsBar';
+import { CommentList } from '../../components/CommentList';
+import { CommentForm } from '../../components/CommentForm';
 import { Card } from '../../components/Card';
 import { getSiteUrl } from '../../lib/site-url.server';
 import { paths } from '../../lib/paths';
@@ -15,9 +18,14 @@ import { buildOgMetaTags } from '../../lib/meta';
 export async function loader({ request, params }: Route.LoaderArgs) {
   const { token, user } = await getOptionalUser(request);
   const post = await postQuery(token, params.postId);
+  const comments = await commentsByPostQuery(post.id, token);
   const url = `${getSiteUrl()}${paths.postDetail(post.id, post.slug)}`;
 
-  return { post, url, currentUserId: user?.id };
+  // Fire-and-forget: view count is a soft engagement signal, not worth
+  // delaying the page render or failing the request over.
+  void incrementPostViewCountMutation(post.id).catch(() => {});
+
+  return { post, comments, url, currentUserId: user?.id };
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -25,7 +33,7 @@ export function meta({ loaderData }: Route.MetaArgs) {
 }
 
 export default function PostDetail({ loaderData }: Route.ComponentProps) {
-  const { post, currentUserId } = loaderData;
+  const { post, comments, currentUserId } = loaderData;
   const isOwner = post.author.id === currentUserId;
   const coverImage = post.openGraphMetadata?.image;
 
@@ -41,7 +49,12 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
 
       <Card className="p-6 sm:p-8">
         <div className="mb-4">
-          <PostAuthorMeta author={post.author} createdAt={post.createdAt} />
+          <PostAuthorMeta
+            author={post.author}
+            createdAt={post.createdAt}
+            readingTimeMinutes={post.readingTimeMinutes}
+            viewCount={post.viewCount}
+          />
         </div>
 
         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 mb-4 leading-tight">
@@ -61,6 +74,21 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
         <CategoryList categories={post.categories} />
 
         <PostActionsBar postId={post.id} postSlug={post.slug} postTitle={post.title} isOwner={isOwner} />
+      </Card>
+
+      <Card className="p-6 sm:p-8 space-y-4">
+        {currentUserId && !isOwner && <CommentForm action={paths.postComments(post.id)} submitLabel="Post Comment" />}
+
+        {!currentUserId && (
+          <p className="text-sm text-slate-500">
+            <Link to={paths.login(paths.postDetail(post.id, post.slug))} className="text-blue-600 font-semibold">
+              Log in
+            </Link>{' '}
+            to leave a comment.
+          </p>
+        )}
+
+        <CommentList comments={comments} postId={post.id} currentUserId={currentUserId} />
       </Card>
     </div>
   );

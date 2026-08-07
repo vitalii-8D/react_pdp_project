@@ -13,6 +13,7 @@ export function Header({ user }: { user?: UserEntity }) {
   const isMyPosts = location.pathname.startsWith(paths.myPosts());
   const isPosts = location.pathname === paths.posts();
   const isChat = location.pathname.startsWith(paths.chat());
+  const isUsers = location.pathname.startsWith(paths.users());
   const loginHref = paths.login(location.pathname + location.search);
 
   return (
@@ -41,6 +42,12 @@ export function Header({ user }: { user?: UserEntity }) {
               <NavLink to={paths.chat()} isActive={isChat}>
                 <Icons.Chat />
                 <span className="ml-2">Chat</span>
+              </NavLink>
+            )}
+            {user && (
+              <NavLink to={paths.users()} isActive={isUsers}>
+                <Icons.Users />
+                <span className="ml-2">Users</span>
               </NavLink>
             )}
           </nav>
@@ -100,6 +107,13 @@ export function Header({ user }: { user?: UserEntity }) {
             <NavLink to={paths.chat()} isActive={isChat} size="sm">
               <Icons.Chat />
               <span className="ml-2">Chat</span>
+            </NavLink>
+          )}
+
+          {user && (
+            <NavLink to={paths.users()} isActive={isUsers} size="sm">
+              <Icons.Users />
+              <span className="ml-2">Users</span>
             </NavLink>
           )}
         </nav>

@@ -3,6 +3,7 @@ import { gql } from 'graphql-request';
 import { gqlRequest, GqlRequestError } from '../graphql-client.server';
 import { categoriesQuery } from './categories.server';
 import { PostFormField } from '../../enums/post-form-field.enum';
+import { PostStatus } from '../../enums/post-status.enum';
 import type { PostEntity } from '../types';
 
 const POST_FIELDS = gql`
@@ -11,7 +12,11 @@ const POST_FIELDS = gql`
     title
     content
     slug
-    published
+    status
+    viewCount
+    readingTimeMinutes
+    commentCount
+    averageRating
     createdAt
     updatedAt
     authorId
@@ -109,7 +114,7 @@ export interface ParsedPostFormInput {
   title: string;
   content: string;
   slug: string;
-  published: boolean;
+  status: PostStatus;
   categoryIds: string[];
   metadata?: PostMetadataInput;
   image?: PostImageInput;
@@ -119,7 +124,7 @@ export async function parsePostFormInput(token: string, formData: FormData): Pro
   const title = String(formData.get(PostFormField.Title) ?? '');
   const content = String(formData.get(PostFormField.Content) ?? '');
   const slug = String(formData.get(PostFormField.Slug) ?? '');
-  const published = formData.get(PostFormField.Published) === 'true';
+  const status = (formData.get(PostFormField.Status) as PostStatus | null) ?? PostStatus.DRAFT;
   const categoryIds = formData.getAll(PostFormField.CategoryIds).map(String);
 
   const imageKey = String(formData.get(PostFormField.ImageKey) ?? '').trim();
@@ -148,14 +153,14 @@ export async function parsePostFormInput(token: string, formData: FormData): Pro
         }
       : undefined;
 
-  return { title, content, slug, published, categoryIds, metadata, image };
+  return { title, content, slug, status, categoryIds, metadata, image };
 }
 
 export interface CreatePostInput {
   title: string;
   content: string;
   slug: string;
-  published?: boolean;
+  status?: PostStatus;
   categoryIds?: string[];
   metadata?: PostMetadataInput;
   image?: PostImageInput;
@@ -179,7 +184,7 @@ export interface UpdatePostInput {
   title?: string;
   content?: string;
   slug?: string;
-  published?: boolean;
+  status?: PostStatus;
   categoryIds?: string[];
   metadata?: PostMetadataInput;
   image?: PostImageInput;
@@ -219,4 +224,15 @@ export async function removePostMutation(token: string, id: string): Promise<voi
       throw error;
     }
   }
+}
+
+export async function incrementPostViewCountMutation(id: string): Promise<void> {
+  const query = gql`
+    mutation IncrementPostViewCount($id: ID!) {
+      incrementPostViewCount(id: $id) {
+        id
+      }
+    }
+  `;
+  await gqlRequest<{ incrementPostViewCount: { id: string } }>(query, { id });
 }

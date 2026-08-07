@@ -8,12 +8,17 @@ export default [
   layout('routes/app-layout.tsx', [
     index('routes/posts/posts.tsx'),
     route('posts/:postId/share-links', 'routes/posts/posts.$postId.share-links.tsx'),
+    route('posts/:postId/comments', 'routes/posts/posts.$postId.comments.tsx'),
+    route('posts/:postId/comments/:commentId', 'routes/posts/posts.$postId.comments.$commentId.tsx'),
+    route('posts/:postId/comments/:commentId/destroy', 'routes/posts/posts.$postId.comments.$commentId.destroy.tsx'),
     route('posts/:postId/:slug', 'routes/posts/posts.$postId.$slug.tsx'),
 
     route('my-posts', 'routes/my-posts/my-posts.tsx'),
     route('my-posts/new', 'routes/my-posts/my-posts.new.tsx'),
     route('my-posts/:postId/edit', 'routes/my-posts/my-posts.$postId.edit.tsx'),
     route('my-posts/:postId/destroy', 'routes/my-posts/my-posts.$postId.destroy.tsx'),
+
+    route('users', 'routes/users/users.tsx'),
 
     route('profile', 'routes/profile/profile.tsx'),
     route('profile/edit', 'routes/profile/profile.edit.tsx'),

@@ -1,6 +1,7 @@
 import { SocialPlatform } from '../enums/social-platform.enum';
 import { UserRole } from '../enums/user-role.enum';
 import { OgType } from '../enums/og-type.enum';
+import { PostStatus } from '../enums/post-status.enum';
 
 export interface UserAvatarEntity {
   id: string;
@@ -13,6 +14,9 @@ export interface UserEntity {
   name: string;
   age?: number | null;
   role: UserRole;
+  city?: string | null;
+  isOnline: boolean;
+  createdAt: string;
   posts?: PostEntity[] | null;
   avatar?: UserAvatarEntity | null;
 }
@@ -60,7 +64,11 @@ export interface PostEntity {
   title: string;
   content: string;
   slug: string;
-  published: boolean;
+  status: PostStatus;
+  viewCount: number;
+  readingTimeMinutes: number;
+  commentCount: number;
+  averageRating?: number | null;
   createdAt: string;
   updatedAt: string;
   authorId: string;
@@ -68,6 +76,17 @@ export interface PostEntity {
   categories?: CategoryEntity[] | null;
   openGraphMetadata?: OpenGraphMetadataEntity | null;
   postImage?: PostImageEntity | null;
+}
+
+export interface CommentEntity {
+  id: string;
+  content: string;
+  rating: number;
+  postId: string;
+  authorId: string;
+  author: UserEntity;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface ShareLinks {

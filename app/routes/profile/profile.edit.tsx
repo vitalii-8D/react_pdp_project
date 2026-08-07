@@ -28,6 +28,7 @@ export async function action({ request }: Route.ActionArgs) {
   const email = String(formData.get(AuthFormField.Email) ?? '');
   const ageRaw = String(formData.get(AuthFormField.Age) ?? '');
   const age = ageRaw ? Number(ageRaw) : undefined;
+  const cityRaw = String(formData.get(AuthFormField.City) ?? '').trim();
   const password = String(formData.get(AuthFormField.Password) ?? '');
 
   const avatarKey = String(formData.get(AvatarFormField.AvatarKey) ?? '').trim();
@@ -38,6 +39,7 @@ export async function action({ request }: Route.ActionArgs) {
       name,
       email,
       age,
+      city: cityRaw || undefined,
       ...(password ? { password } : {}),
     });
 
@@ -89,6 +91,15 @@ export default function EditProfile({ loaderData, actionData }: Route.ComponentP
         />
 
         <TextField id="age" label="Age" name={AuthFormField.Age} type="number" min={0} defaultValue={user.age ?? ''} />
+
+        <TextField
+          id="city"
+          label="City"
+          name={AuthFormField.City}
+          type="text"
+          defaultValue={user.city ?? ''}
+          hint="Used for location-based search when finding other users."
+        />
 
         <TextField
           id="password"

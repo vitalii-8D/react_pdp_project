@@ -5,9 +5,11 @@ import type { UserEntity } from '../lib/types';
 interface PostAuthorMetaProps {
   author: UserEntity;
   createdAt: string;
+  readingTimeMinutes?: number;
+  viewCount?: number;
 }
 
-export function PostAuthorMeta({ author, createdAt }: PostAuthorMetaProps) {
+export function PostAuthorMeta({ author, createdAt, readingTimeMinutes, viewCount }: PostAuthorMetaProps) {
   return (
     <div className="flex items-center space-x-3">
       <img
@@ -17,7 +19,11 @@ export function PostAuthorMeta({ author, createdAt }: PostAuthorMetaProps) {
       />
       <div>
         <p className="text-sm font-bold text-slate-900">{author.name}</p>
-        <p className="text-xs text-slate-400">{formatDate(createdAt)}</p>
+        <p className="text-xs text-slate-400">
+          {formatDate(createdAt)}
+          {readingTimeMinutes !== undefined && <> · {readingTimeMinutes} min read</>}
+          {viewCount !== undefined && <> · {viewCount} views</>}
+        </p>
       </div>
     </div>
   );

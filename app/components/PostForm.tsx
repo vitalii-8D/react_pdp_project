@@ -3,6 +3,7 @@ import { Form, Link } from 'react-router';
 
 import { formatSlug } from '../lib/format-slug';
 import { PostFormField } from '../enums/post-form-field.enum';
+import { PostStatus } from '../enums/post-status.enum';
 import { UploadPurpose } from '../enums/upload-purpose.enum';
 import { cardClassName } from './Card';
 import { TextField } from './TextField';
@@ -23,7 +24,7 @@ interface PostFormDefaultValues {
   title: string;
   content: string;
   slug: string;
-  published: boolean;
+  status: PostStatus;
   categoryIds: string[];
   image?: PostFormImageDefaultValue;
 }
@@ -124,16 +125,21 @@ export function PostForm({ categories, defaultValues, error, pending, cancelTo, 
         </div>
       )}
 
-      <label className="flex items-center text-sm font-semibold text-slate-700">
-        <input
-          type="checkbox"
-          name={PostFormField.Published}
-          value="true"
-          defaultChecked={defaultValues?.published}
-          className="mr-2"
-        />
-        Published
-      </label>
+      <div>
+        <label htmlFor="status" className="block text-sm font-semibold text-slate-700 mb-1.5">
+          Status
+        </label>
+        <select
+          id="status"
+          name={PostFormField.Status}
+          defaultValue={defaultValues?.status ?? PostStatus.DRAFT}
+          className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+        >
+          <option value={PostStatus.DRAFT}>Draft</option>
+          <option value={PostStatus.PUBLISHED}>Published</option>
+          <option value={PostStatus.ARCHIVED}>Archived</option>
+        </select>
+      </div>
 
       <div className="flex items-center justify-end space-x-3 pt-2">
         <Link to={cancelTo} className={buttonStyles({ variant: 'secondary' })}>

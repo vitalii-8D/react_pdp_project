@@ -3,5 +3,6 @@ export enum AuthFormField {
   Email = 'email',
   Password = 'password',
   Age = 'age',
+  City = 'city',
   From = 'from',
 }

@@ -15,7 +15,12 @@ export function PostCard({ post, currentUserId }: { post: PostEntity; currentUse
     <Card className="p-6 sm:p-8 transition-all duration-300 hover:shadow-md hover:border-slate-300">
       <Link to={paths.postDetail(post.id, post.slug)} className="block">
         <div className="flex justify-between items-start mb-4">
-          <PostAuthorMeta author={post.author} createdAt={post.createdAt} />
+          <PostAuthorMeta
+            author={post.author}
+            createdAt={post.createdAt}
+            readingTimeMinutes={post.readingTimeMinutes}
+            viewCount={post.viewCount}
+          />
 
           {isOwner && (
             <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100">

@@ -10,6 +10,9 @@ const USER_FIELDS = gql`
     name
     age
     role
+    city
+    isOnline
+    createdAt
     avatar {
       id
       url
@@ -86,6 +89,21 @@ export async function loginMutation(email: string, password: string): Promise<Au
   return data.login;
 }
 
+export async function usersQuery(token: string): Promise<UserEntity[]> {
+  const query = gql`
+    ${USER_FIELDS}
+    query Users {
+      users {
+        ...UserFields
+      }
+    }
+  `;
+
+  const data = await gqlRequest<{ users: UserEntity[] }>(query, undefined, token);
+
+  return data.users;
+}
+
 export async function searchUsersQuery(token: string, query: string): Promise<ChatMessageUser[]> {
   const gqlQuery = gql`
     query SearchUsers($query: String!) {
@@ -132,6 +150,7 @@ export interface UpdateUserInput {
   email?: string;
   password?: string;
   age?: number;
+  city?: string;
 }
 
 export async function updateUserMutation(token: string, input: UpdateUserInput): Promise<UserEntity> {

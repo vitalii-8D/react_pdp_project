@@ -49,7 +49,7 @@ export default function EditPost({ loaderData, actionData }: Route.ComponentProp
           title: post.title,
           content: post.content,
           slug: post.slug,
-          published: post.published,
+          status: post.status,
           categoryIds: post.categories?.map((category) => category.id) ?? [],
           image: post.postImage
             ? {
