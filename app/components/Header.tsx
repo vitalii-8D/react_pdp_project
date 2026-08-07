@@ -6,6 +6,7 @@ import { NavLink } from './NavLink';
 import { buttonStyles } from './Button';
 import { avatarUrl } from '../lib/images';
 import { paths } from '../lib/paths';
+import { UserRole } from '../enums/user-role.enum';
 import type { UserEntity } from '../lib/types';
 
 export function Header({ user }: { user?: UserEntity }) {
@@ -14,6 +15,8 @@ export function Header({ user }: { user?: UserEntity }) {
   const isPosts = location.pathname === paths.posts();
   const isChat = location.pathname.startsWith(paths.chat());
   const isUsers = location.pathname.startsWith(paths.users());
+  const isAnalytics = location.pathname.startsWith(paths.analytics());
+  const isAdmin = user?.role === UserRole.ADMIN;
   const loginHref = paths.login(location.pathname + location.search);
 
   return (
@@ -48,6 +51,12 @@ export function Header({ user }: { user?: UserEntity }) {
               <NavLink to={paths.users()} isActive={isUsers}>
                 <Icons.Users />
                 <span className="ml-2">Users</span>
+              </NavLink>
+            )}
+            {isAdmin && (
+              <NavLink to={paths.analytics()} isActive={isAnalytics}>
+                <Icons.Analytics />
+                <span className="ml-2">Analytics</span>
               </NavLink>
             )}
           </nav>
@@ -114,6 +123,13 @@ export function Header({ user }: { user?: UserEntity }) {
             <NavLink to={paths.users()} isActive={isUsers} size="sm">
               <Icons.Users />
               <span className="ml-2">Users</span>
+            </NavLink>
+          )}
+
+          {isAdmin && (
+            <NavLink to={paths.analytics()} isActive={isAnalytics} size="sm">
+              <Icons.Analytics />
+              <span className="ml-2">Analytics</span>
             </NavLink>
           )}
         </nav>

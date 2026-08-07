@@ -19,9 +19,11 @@ export default [
     route('my-posts/:postId/destroy', 'routes/my-posts/my-posts.$postId.destroy.tsx'),
 
     route('users', 'routes/users/users.tsx'),
+    route('analytics', 'routes/analytics/analytics.tsx'),
 
     route('profile', 'routes/profile/profile.tsx'),
     route('profile/edit', 'routes/profile/profile.edit.tsx'),
+    route('profile/geocode', 'routes/profile/profile.geocode.tsx'),
 
     route('uploads/presign', 'routes/uploads/uploads.presign.tsx'),
 

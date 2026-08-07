@@ -11,6 +11,7 @@ import { UploadPurpose } from '../../enums/upload-purpose.enum';
 import { paths } from '../../lib/paths';
 import { cardClassName } from '../../components/Card';
 import { TextField } from '../../components/TextField';
+import { AddressAutocompleteField } from '../../components/AddressAutocompleteField';
 import { ImageUploadField } from '../../components/ImageUploadField';
 import { Button, buttonStyles } from '../../components/Button';
 
@@ -29,6 +30,8 @@ export async function action({ request }: Route.ActionArgs) {
   const ageRaw = String(formData.get(AuthFormField.Age) ?? '');
   const age = ageRaw ? Number(ageRaw) : undefined;
   const cityRaw = String(formData.get(AuthFormField.City) ?? '').trim();
+  const latRaw = String(formData.get(AuthFormField.Lat) ?? '').trim();
+  const lonRaw = String(formData.get(AuthFormField.Lon) ?? '').trim();
   const password = String(formData.get(AuthFormField.Password) ?? '');
 
   const avatarKey = String(formData.get(AvatarFormField.AvatarKey) ?? '').trim();
@@ -40,6 +43,7 @@ export async function action({ request }: Route.ActionArgs) {
       email,
       age,
       city: cityRaw || undefined,
+      ...(latRaw && lonRaw ? { latitude: Number(latRaw), longitude: Number(lonRaw) } : {}),
       ...(password ? { password } : {}),
     });
 
@@ -92,13 +96,15 @@ export default function EditProfile({ loaderData, actionData }: Route.ComponentP
 
         <TextField id="age" label="Age" name={AuthFormField.Age} type="number" min={0} defaultValue={user.age ?? ''} />
 
-        <TextField
-          id="city"
+        <AddressAutocompleteField
           label="City"
-          name={AuthFormField.City}
-          type="text"
-          defaultValue={user.city ?? ''}
-          hint="Used for location-based search when finding other users."
+          cityFieldName={AuthFormField.City}
+          latFieldName={AuthFormField.Lat}
+          lonFieldName={AuthFormField.Lon}
+          defaultCity={user.city ?? ''}
+          defaultLat={user.latitude}
+          defaultLon={user.longitude}
+          hint="Search your city to enable location-based search when finding other users."
         />
 
         <TextField

@@ -15,6 +15,8 @@ export interface UserEntity {
   age?: number | null;
   role: UserRole;
   city?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
   isOnline: boolean;
   createdAt: string;
   posts?: PostEntity[] | null;

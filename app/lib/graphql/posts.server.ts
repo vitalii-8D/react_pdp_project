@@ -97,6 +97,49 @@ export async function postQuery(token: string | undefined, id: string): Promise<
   return data.post;
 }
 
+export type SearchPostsQueryMode = 'SIMPLE' | 'QUERY_STRING';
+
+export interface SearchPostsInput {
+  query?: string;
+  mode?: SearchPostsQueryMode;
+  categories?: string[];
+  createdAt?: { from?: string; to?: string };
+  readingTime?: { min?: number; max?: number };
+  cursor?: string;
+  limit?: number;
+}
+
+export interface CategoryFacet {
+  name: string;
+  count: number;
+}
+
+export interface SearchPostsResult {
+  items: PostEntity[];
+  facets: CategoryFacet[];
+  nextCursor?: string | null;
+}
+
+export async function searchPostsQuery(token: string | undefined, input: SearchPostsInput): Promise<SearchPostsResult> {
+  const query = gql`
+    ${POST_FIELDS}
+    query SearchPosts($input: SearchPostsInput!) {
+      searchPosts(input: $input) {
+        items {
+          ...PostFields
+        }
+        facets {
+          name
+          count
+        }
+        nextCursor
+      }
+    }
+  `;
+  const data = await gqlRequest<{ searchPosts: SearchPostsResult }>(query, { input }, token);
+  return data.searchPosts;
+}
+
 export interface PostMetadataInput {
   tags?: string[];
 }

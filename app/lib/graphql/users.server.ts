@@ -11,6 +11,8 @@ const USER_FIELDS = gql`
     age
     role
     city
+    latitude
+    longitude
     isOnline
     createdAt
     avatar {
@@ -106,16 +108,49 @@ export async function usersQuery(token: string): Promise<UserEntity[]> {
 
 export async function searchUsersQuery(token: string, query: string): Promise<ChatMessageUser[]> {
   const gqlQuery = gql`
-    query SearchUsers($query: String!) {
-      searchUsers(query: $query) {
-        id
-        name
-        email
+    query SearchUsers($input: SearchUsersInput!) {
+      searchUsers(input: $input) {
+        items {
+          id
+          name
+          email
+        }
       }
     }
   `;
 
-  const data = await gqlRequest<{ searchUsers: ChatMessageUser[] }>(gqlQuery, { query }, token);
+  const data = await gqlRequest<{ searchUsers: { items: ChatMessageUser[] } }>(gqlQuery, { input: { query } }, token);
+
+  return data.searchUsers.items;
+}
+
+export interface SearchUsersInput {
+  query?: string;
+  useMyLocation?: boolean;
+  radiusKm?: number;
+  cursor?: string;
+  limit?: number;
+}
+
+export interface SearchUsersResult {
+  items: UserEntity[];
+  nextCursor?: string | null;
+}
+
+export async function searchUsersFullQuery(token: string, input: SearchUsersInput): Promise<SearchUsersResult> {
+  const query = gql`
+    ${USER_FIELDS}
+    query SearchUsersFull($input: SearchUsersInput!) {
+      searchUsers(input: $input) {
+        items {
+          ...UserFields
+        }
+        nextCursor
+      }
+    }
+  `;
+
+  const data = await gqlRequest<{ searchUsers: SearchUsersResult }>(query, { input }, token);
 
   return data.searchUsers;
 }
@@ -151,6 +186,8 @@ export interface UpdateUserInput {
   password?: string;
   age?: number;
   city?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export async function updateUserMutation(token: string, input: UpdateUserInput): Promise<UserEntity> {

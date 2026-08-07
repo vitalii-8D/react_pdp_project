@@ -4,5 +4,7 @@ export enum AuthFormField {
   Password = 'password',
   Age = 'age',
   City = 'city',
+  Lat = 'lat',
+  Lon = 'lon',
   From = 'from',
 }

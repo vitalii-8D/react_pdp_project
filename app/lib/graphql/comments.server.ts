@@ -74,6 +74,82 @@ export async function updateCommentMutation(token: string, input: UpdateCommentI
   return data.updateComment;
 }
 
+export interface CommentsPerPostStat {
+  postId: string;
+  postTitle: string;
+  count: number;
+}
+
+export interface CommentsPerUserStat {
+  userId: string;
+  userName: string;
+  count: number;
+}
+
+export interface CommentsPerPeriodStat {
+  period: string;
+  count: number;
+}
+
+export interface RatingDistributionStat {
+  rating: number;
+  count: number;
+}
+
+export async function commentsPerPostQuery(token: string): Promise<CommentsPerPostStat[]> {
+  const query = gql`
+    query CommentsPerPost {
+      commentsPerPost {
+        postId
+        postTitle
+        count
+      }
+    }
+  `;
+  const data = await gqlRequest<{ commentsPerPost: CommentsPerPostStat[] }>(query, undefined, token);
+  return data.commentsPerPost;
+}
+
+export async function commentsPerUserQuery(token: string): Promise<CommentsPerUserStat[]> {
+  const query = gql`
+    query CommentsPerUser {
+      commentsPerUser {
+        userId
+        userName
+        count
+      }
+    }
+  `;
+  const data = await gqlRequest<{ commentsPerUser: CommentsPerUserStat[] }>(query, undefined, token);
+  return data.commentsPerUser;
+}
+
+export async function commentsPerPeriodQuery(token: string, granularity: 'DAY' | 'MONTH'): Promise<CommentsPerPeriodStat[]> {
+  const query = gql`
+    query CommentsPerPeriod($granularity: CommentPeriodGranularity!) {
+      commentsPerPeriod(granularity: $granularity) {
+        period
+        count
+      }
+    }
+  `;
+  const data = await gqlRequest<{ commentsPerPeriod: CommentsPerPeriodStat[] }>(query, { granularity }, token);
+  return data.commentsPerPeriod;
+}
+
+export async function commentRatingDistributionQuery(token: string): Promise<RatingDistributionStat[]> {
+  const query = gql`
+    query CommentRatingDistribution {
+      commentRatingDistribution {
+        rating
+        count
+      }
+    }
+  `;
+  const data = await gqlRequest<{ commentRatingDistribution: RatingDistributionStat[] }>(query, undefined, token);
+  return data.commentRatingDistribution;
+}
+
 export async function removeCommentMutation(token: string, id: string): Promise<void> {
   const query = gql`
     mutation RemoveComment($id: ID!) {
