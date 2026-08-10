@@ -113,12 +113,7 @@ export const Icons = {
   ),
   Analytics: () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        strokeWidth={2}
-        d="M3 3v18h18M8 17V10m5 7V6m5 11v-4"
-      />
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3v18h18M8 17V10m5 7V6m5 11v-4" />
     </svg>
   ),
   Users: () => (

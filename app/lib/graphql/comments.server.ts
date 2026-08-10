@@ -124,7 +124,10 @@ export async function commentsPerUserQuery(token: string): Promise<CommentsPerUs
   return data.commentsPerUser;
 }
 
-export async function commentsPerPeriodQuery(token: string, granularity: 'DAY' | 'MONTH'): Promise<CommentsPerPeriodStat[]> {
+export async function commentsPerPeriodQuery(
+  token: string,
+  granularity: 'DAY' | 'MONTH',
+): Promise<CommentsPerPeriodStat[]> {
   const query = gql`
     query CommentsPerPeriod($granularity: CommentPeriodGranularity!) {
       commentsPerPeriod(granularity: $granularity) {

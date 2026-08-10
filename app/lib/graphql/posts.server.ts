@@ -97,11 +97,8 @@ export async function postQuery(token: string | undefined, id: string): Promise<
   return data.post;
 }
 
-export type SearchPostsQueryMode = 'SIMPLE' | 'QUERY_STRING';
-
 export interface SearchPostsInput {
   query?: string;
-  mode?: SearchPostsQueryMode;
   categories?: string[];
   createdAt?: { from?: string; to?: string };
   readingTime?: { min?: number; max?: number };
@@ -109,14 +106,8 @@ export interface SearchPostsInput {
   limit?: number;
 }
 
-export interface CategoryFacet {
-  name: string;
-  count: number;
-}
-
 export interface SearchPostsResult {
   items: PostEntity[];
-  facets: CategoryFacet[];
   nextCursor?: string | null;
 }
 
@@ -127,10 +118,6 @@ export async function searchPostsQuery(token: string | undefined, input: SearchP
       searchPosts(input: $input) {
         items {
           ...PostFields
-        }
-        facets {
-          name
-          count
         }
         nextCursor
       }

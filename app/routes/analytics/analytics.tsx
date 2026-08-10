@@ -114,7 +114,14 @@ export default function Analytics({ loaderData }: Route.ComponentProps) {
               <XAxis dataKey="label" tick={axisTickStyle} stroke={AXIS_COLOR} />
               <YAxis tick={axisTickStyle} stroke={AXIS_COLOR} allowDecimals={false} />
               <Tooltip />
-              <Line type="monotone" dataKey="count" name="Signups" stroke={SEQUENTIAL_BLUE} strokeWidth={2} dot={{ r: 3 }} />
+              <Line
+                type="monotone"
+                dataKey="count"
+                name="Signups"
+                stroke={SEQUENTIAL_BLUE}
+                strokeWidth={2}
+                dot={{ r: 3 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </Section>
@@ -193,7 +200,14 @@ export default function Analytics({ loaderData }: Route.ComponentProps) {
               <XAxis dataKey="label" tick={axisTickStyle} stroke={AXIS_COLOR} />
               <YAxis tick={axisTickStyle} stroke={AXIS_COLOR} allowDecimals={false} />
               <Tooltip />
-              <Line type="monotone" dataKey="count" name="Comments" stroke={SEQUENTIAL_BLUE} strokeWidth={2} dot={{ r: 3 }} />
+              <Line
+                type="monotone"
+                dataKey="count"
+                name="Comments"
+                stroke={SEQUENTIAL_BLUE}
+                strokeWidth={2}
+                dot={{ r: 3 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </Section>

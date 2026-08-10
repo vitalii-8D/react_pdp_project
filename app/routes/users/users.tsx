@@ -1,13 +1,15 @@
-import { Form, Link } from 'react-router';
+import { useEffect, useState } from 'react';
+import { Form, Link, useFetcher, useSearchParams } from 'react-router';
 
 import type { Route } from './+types/users';
 import { requireUser } from '../../lib/auth.server';
-import { searchUsersFullQuery, type SearchUsersInput } from '../../lib/graphql/users.server';
+import { searchUsersFullQuery, type SearchUsersInput, type SearchUsersResult } from '../../lib/graphql/users.server';
 import { avatarUrl } from '../../lib/images';
 import { paths } from '../../lib/paths';
 import { Card } from '../../components/Card';
 import { TextField } from '../../components/TextField';
 import { buttonStyles } from '../../components/Button';
+import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 
 const RADIUS_OPTIONS = [
   { label: 'Any distance', value: '' },
@@ -39,10 +41,33 @@ export async function loader({ request }: Route.LoaderArgs) {
 export default function Users({ loaderData }: Route.ComponentProps) {
   const { result, filters, hasLocation } = loaderData;
 
-  const nextCursorParams = new URLSearchParams();
-  if (filters.q) nextCursorParams.set('q', filters.q);
-  if (filters.radiusKm) nextCursorParams.set('radiusKm', filters.radiusKm);
-  if (result.nextCursor) nextCursorParams.set('cursor', result.nextCursor);
+  const [searchParams] = useSearchParams();
+  const fetcher = useFetcher<{ result: SearchUsersResult }>();
+
+  const [items, setItems] = useState(result.items);
+  const [nextCursor, setNextCursor] = useState(result.nextCursor);
+
+  useEffect(() => {
+    setItems(result.items);
+    setNextCursor(result.nextCursor);
+  }, [result]);
+
+  useEffect(() => {
+    if (fetcher.data && fetcher.state === 'idle') {
+      setItems((prev) => [...prev, ...fetcher.data!.result.items]);
+      setNextCursor(fetcher.data!.result.nextCursor);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetcher.data]);
+
+  const canLoadMore = Boolean(nextCursor) && fetcher.state === 'idle';
+  const loadMore = () => {
+    if (!nextCursor || fetcher.state !== 'idle') return;
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set('cursor', nextCursor);
+    fetcher.load(`?${nextParams.toString()}`);
+  };
+  const sentinelRef = useInfiniteScroll(loadMore, canLoadMore);
 
   return (
     <div className="space-y-6">
@@ -54,7 +79,14 @@ export default function Users({ loaderData }: Route.ComponentProps) {
       <Card className="p-5 sm:p-6">
         <Form method="get" className="flex flex-col sm:flex-row gap-3 sm:items-end">
           <div className="flex-grow">
-            <TextField id="q" label="Search" name="q" type="text" defaultValue={filters.q} placeholder="Name, email, city..." />
+            <TextField
+              id="q"
+              label="Search"
+              name="q"
+              type="text"
+              defaultValue={filters.q}
+              placeholder="Name, email, city..."
+            />
           </div>
           <div className="w-full sm:w-56">
             <label htmlFor="radiusKm" className="block text-sm font-semibold text-slate-700 mb-1.5">
@@ -88,13 +120,13 @@ export default function Users({ loaderData }: Route.ComponentProps) {
         )}
       </Card>
 
-      {result.items.length === 0 ? (
+      {items.length === 0 ? (
         <Card className="p-12 text-center">
           <p className="text-slate-400 text-lg">No users found.</p>
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
-          {result.items.map((user) => (
+          {items.map((user) => (
             <Card key={user.id} className="p-5 flex items-center space-x-4">
               <div className="relative shrink-0">
                 <img
@@ -119,13 +151,8 @@ export default function Users({ loaderData }: Route.ComponentProps) {
         </div>
       )}
 
-      {result.nextCursor && (
-        <div className="flex justify-center">
-          <a href={`?${nextCursorParams.toString()}`} className={buttonStyles({ variant: 'secondary' })}>
-            Load more
-          </a>
-        </div>
-      )}
+      <div ref={sentinelRef} />
+      {fetcher.state !== 'idle' && <p className="text-center text-sm text-slate-400 py-2">Loading more…</p>}
     </div>
   );
 }
