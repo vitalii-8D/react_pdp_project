@@ -31,6 +31,14 @@ const CHAT_MESSAGE_FIELDS = gql`
     }
     roomId
     createdAt
+    attachments {
+      id
+      key
+      url
+      originalFileName
+      mimeType
+      sizeBytes
+    }
   }
 `;
 
