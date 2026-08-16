@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import type { Route } from './+types/my-posts';
 import { requireUser } from '../../lib/auth.server';
 import { myPostsQuery } from '../../lib/graphql/posts.server';
+import { getStripePublishableKey } from '../../lib/stripe.server';
 import { paths } from '../../lib/paths';
 import { PostCard } from '../../components/PostCard';
 import { Icons } from '../../components/Icons';
@@ -13,11 +14,11 @@ export async function loader({ request }: Route.LoaderArgs) {
   const { token, user } = await requireUser(request);
   const posts = await myPostsQuery(token);
 
-  return { posts, currentUserId: user.id };
+  return { posts, currentUserId: user.id, stripePublishableKey: getStripePublishableKey() };
 }
 
 export default function MyPosts({ loaderData }: Route.ComponentProps) {
-  const { posts, currentUserId } = loaderData;
+  const { posts, currentUserId, stripePublishableKey } = loaderData;
 
   return (
     <div className="space-y-6">
@@ -42,7 +43,12 @@ export default function MyPosts({ loaderData }: Route.ComponentProps) {
       ) : (
         <div className="space-y-6">
           {posts.map((post) => (
-            <PostCard key={post.id} post={post} currentUserId={currentUserId} />
+            <PostCard
+              key={post.id}
+              post={post}
+              currentUserId={currentUserId}
+              stripePublishableKey={stripePublishableKey}
+            />
           ))}
         </div>
       )}

@@ -17,6 +17,11 @@ export default [
     route('my-posts/new', 'routes/my-posts/my-posts.new.tsx'),
     route('my-posts/:postId/edit', 'routes/my-posts/my-posts.$postId.edit.tsx'),
     route('my-posts/:postId/destroy', 'routes/my-posts/my-posts.$postId.destroy.tsx'),
+    route('my-posts/:postId/publish', 'routes/my-posts/my-posts.$postId.publish.tsx'),
+    route('my-posts/:postId/retry-payment', 'routes/my-posts/my-posts.$postId.retry-payment.tsx'),
+
+    route('payments/success', 'routes/payments/payments.success.tsx'),
+    route('payments/cancel', 'routes/payments/payments.cancel.tsx'),
 
     route('users', 'routes/users/users.tsx'),
     route('analytics', 'routes/analytics/analytics.tsx'),
@@ -24,6 +29,10 @@ export default [
     route('profile', 'routes/profile/profile.tsx'),
     route('profile/edit', 'routes/profile/profile.edit.tsx'),
     route('profile/geocode', 'routes/profile/profile.geocode.tsx'),
+    route(
+      'profile/transactions/:transactionId/refund',
+      'routes/profile/profile.transactions.$transactionId.refund.tsx',
+    ),
 
     route('uploads/presign', 'routes/uploads/uploads.presign.tsx'),
 

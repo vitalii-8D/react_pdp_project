@@ -17,6 +17,8 @@ const POST_FIELDS = gql`
     readingTimeMinutes
     commentCount
     averageRating
+    hasBeenPublished
+    paymentStatus
     createdAt
     updatedAt
     authorId

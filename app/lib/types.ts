@@ -2,6 +2,7 @@ import { SocialPlatform } from '../enums/social-platform.enum';
 import { UserRole } from '../enums/user-role.enum';
 import { OgType } from '../enums/og-type.enum';
 import { PostStatus } from '../enums/post-status.enum';
+import { PaymentTransactionStatus, PostPaymentStatus } from '../enums/payment-status.enum';
 
 export interface UserAvatarEntity {
   id: string;
@@ -71,6 +72,8 @@ export interface PostEntity {
   readingTimeMinutes: number;
   commentCount: number;
   averageRating?: number | null;
+  hasBeenPublished: boolean;
+  paymentStatus: PostPaymentStatus;
   createdAt: string;
   updatedAt: string;
   authorId: string;
@@ -78,6 +81,23 @@ export interface PostEntity {
   categories?: CategoryEntity[] | null;
   openGraphMetadata?: OpenGraphMetadataEntity | null;
   postImage?: PostImageEntity | null;
+}
+
+export interface PaymentTransactionEntity {
+  id: string;
+  status: PaymentTransactionStatus;
+  amount: number;
+  currency: string;
+  stripePaymentIntentId?: string | null;
+  failureReason?: string | null;
+  refundedAt?: string | null;
+  createdAt: string;
+  updatedAt: string;
+  post: {
+    id: string;
+    title: string;
+    slug: string;
+  };
 }
 
 export interface CommentEntity {
