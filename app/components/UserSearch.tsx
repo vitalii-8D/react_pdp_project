@@ -12,7 +12,12 @@ interface SearchFetcherData {
   users: ChatMessageUser[];
 }
 
-export function UserSearch() {
+interface UserSearchProps {
+  searchAction?: string;
+  startDmAction?: string;
+}
+
+export function UserSearch({ searchAction = paths.chatUsersSearch(), startDmAction = paths.chatStartDm() }: UserSearchProps) {
   const [query, setQuery] = useState('');
   const searchFetcher = useFetcher<SearchFetcherData>();
   const startDmFetcher = useFetcher();
@@ -27,7 +32,7 @@ export function UserSearch() {
 
     clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      searchFetcher.load(`${paths.chatUsersSearch()}?q=${encodeURIComponent(trimmedQuery)}`);
+      searchFetcher.load(`${searchAction}?q=${encodeURIComponent(trimmedQuery)}`);
     }, DEBOUNCE_MS);
 
     return () => clearTimeout(debounceRef.current);
@@ -36,7 +41,7 @@ export function UserSearch() {
   const results = searchFetcher.data?.users ?? [];
 
   function handleSelect(userId: string) {
-    startDmFetcher.submit({ [ChatFormField.UserId]: userId }, { method: 'post', action: paths.chatStartDm() });
+    startDmFetcher.submit({ [ChatFormField.UserId]: userId }, { method: 'post', action: startDmAction });
   }
 
   return (
