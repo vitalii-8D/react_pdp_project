@@ -15,7 +15,7 @@ import {
 } from 'recharts';
 
 import type { Route } from './+types/analytics';
-import { requireUser } from '../../lib/auth.server';
+import { requireUserFromContext } from '../../lib/auth.server';
 import { analyticsDashboardQuery } from '../../lib/graphql/analytics.server';
 import {
   commentsPerPostQuery,
@@ -40,8 +40,8 @@ const RATING_RAMP: Record<number, string> = { 1: '#86b6ef', 2: '#6da7ec', 3: '#5
 
 const axisTickStyle = { fontSize: 12, fill: MUTED };
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const { token, user } = await requireUser(request);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const { token, user } = await requireUserFromContext(request, context);
   if (user.role !== UserRole.ADMIN) {
     throw redirect(paths.posts());
   }

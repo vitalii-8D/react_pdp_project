@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Form, Link, useFetcher, useSearchParams } from 'react-router';
 
 import type { Route } from './+types/users';
-import { requireUser } from '../../lib/auth.server';
+import { requireUserFromContext } from '../../lib/auth.server';
 import { searchUsersFullQuery, type SearchUsersInput, type SearchUsersResult } from '../../lib/graphql/users.server';
 import { avatarUrl } from '../../lib/images';
 import { paths } from '../../lib/paths';
@@ -18,8 +18,8 @@ const RADIUS_OPTIONS = [
   { label: 'Within 100 km', value: '100' },
 ];
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const { token, user } = await requireUser(request);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const { token, user } = await requireUserFromContext(request, context);
   const params = new URL(request.url).searchParams;
 
   const q = params.get('q') ?? '';

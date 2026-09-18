@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { redirect, Form, Link, useNavigation } from 'react-router';
 
 import type { Route } from './+types/profile.edit';
-import { requireUser } from '../../lib/auth.server';
+import { requireUserFromContext } from '../../lib/auth.server';
 import { meWithAvatarQuery, updateUserMutation, updateAvatarMutation } from '../../lib/graphql/users.server';
 import { toActionError } from '../../lib/graphql-client.server';
 import { AuthFormField } from '../../enums/auth-form-field.enum';
@@ -15,14 +15,14 @@ import { AddressAutocompleteField } from '../../components/AddressAutocompleteFi
 import { ImageUploadField } from '../../components/ImageUploadField';
 import { Button, buttonStyles } from '../../components/Button';
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const { token } = await requireUser(request);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const { token } = await requireUserFromContext(request, context);
   const user = await meWithAvatarQuery(token);
   return { user };
 }
 
-export async function action({ request }: Route.ActionArgs) {
-  const { token, user } = await requireUser(request);
+export async function action({ request, context }: Route.ActionArgs) {
+  const { token, user } = await requireUserFromContext(request, context);
   const formData = await request.formData();
 
   const name = String(formData.get(AuthFormField.Name) ?? '');

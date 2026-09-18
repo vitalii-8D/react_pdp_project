@@ -1,5 +1,5 @@
 import type { Route } from './+types/profile.geocode';
-import { requireUser } from '../../lib/auth.server';
+import { requireUserFromContext } from '../../lib/auth.server';
 
 const MIN_QUERY_LENGTH = 3;
 const NOMINATIM_MIN_INTERVAL_MS = 1000;
@@ -23,8 +23,8 @@ interface NominatimResult {
 // deployment would need a shared throttle instead.
 let lastCallAt = 0;
 
-export async function loader({ request }: Route.LoaderArgs) {
-  await requireUser(request);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  await requireUserFromContext(request, context);
 
   const q = new URL(request.url).searchParams.get('q')?.trim() ?? '';
   if (q.length < MIN_QUERY_LENGTH) {

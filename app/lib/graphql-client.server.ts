@@ -1,8 +1,19 @@
 import { data } from 'react-router';
 import { GraphQLClient, ClientError, type Variables } from 'graphql-request';
 
-const SERVER_URL = process.env.SERVER_URL ?? 'http://localhost:3000';
-const client = new GraphQLClient(`${SERVER_URL}/graphql`);
+export function getServerUrl(): string {
+  return process.env.SERVER_URL ?? 'http://localhost:3000';
+}
+
+export function getGraphqlHttpUrl(): string {
+  return `${getServerUrl()}/graphql`;
+}
+
+export function getGraphqlWsUrl(): string {
+  return `${getServerUrl().replace(/^http/, 'ws')}/graphql`;
+}
+
+const client = new GraphQLClient(getGraphqlHttpUrl());
 
 export class GqlRequestError extends Error {
   status: number;
@@ -35,12 +46,8 @@ export function toActionError(error: unknown, fallback = 'Something went wrong. 
 }
 
 export async function gqlRequest<T>(query: string, variables?: Variables, token?: string): Promise<T> {
-  if (token) {
-    client.setHeader('Authorization', `Bearer ${token}`);
-  }
-
   try {
-    return await client.request<T>(query, variables);
+    return await client.request<T>(query, variables, token ? { Authorization: `Bearer ${token}` } : undefined);
   } catch (error) {
     if (error instanceof ClientError) {
       const { message, status } = extractMessage(error);

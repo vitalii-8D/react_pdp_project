@@ -41,11 +41,10 @@ export default [
     route('chat/dm', 'routes/chat/chat.start-dm.tsx'),
     route('chat/:roomId', 'routes/chat/chat.$roomId.tsx'),
 
-    // Chat V2 - same functionality as Chat above, but the room view uses GraphQL subscriptions
-    // (graphql-ws) instead of the Socket.IO gateway for real-time updates. Chat (V1) is untouched.
     route('chat-v2', 'routes/chat-v2/chat-v2.tsx'),
     route('chat-v2/users/search', 'routes/chat-v2/chat-v2.users-search.tsx'),
     route('chat-v2/dm', 'routes/chat-v2/chat-v2.start-dm.tsx'),
+    route('chat-v2/broadcast', 'routes/chat-v2/chat-v2.broadcast.tsx'),
     route('chat-v2/:roomId', 'routes/chat-v2/chat-v2.$roomId.tsx'),
   ]),
 ] satisfies RouteConfig;

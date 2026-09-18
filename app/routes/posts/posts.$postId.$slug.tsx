@@ -1,7 +1,7 @@
-import { Link } from 'react-router';
+import { data, Link } from 'react-router';
 
 import type { Route } from './+types/posts.$postId.$slug';
-import { getOptionalUser } from '../../lib/auth.server';
+import { getOptionalUserFromContext } from '../../lib/auth.server';
 import { postQuery, incrementPostViewCountMutation } from '../../lib/graphql/posts.server';
 import { commentsByPostQuery } from '../../lib/graphql/comments.server';
 import { Icons } from '../../components/Icons';
@@ -15,8 +15,8 @@ import { getSiteUrl } from '../../lib/site-url.server';
 import { paths } from '../../lib/paths';
 import { buildOgMetaTags } from '../../lib/meta';
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const { token, user } = await getOptionalUser(request);
+export async function loader({ params, context }: Route.LoaderArgs) {
+  const { token, user } = getOptionalUserFromContext(context);
   const post = await postQuery(token, params.postId);
   const comments = await commentsByPostQuery(post.id, token);
   const url = `${getSiteUrl()}${paths.postDetail(post.id, post.slug)}`;
@@ -25,11 +25,19 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   // delaying the page render or failing the request over.
   void incrementPostViewCountMutation(post.id).catch(() => {});
 
-  return { post, comments, url, currentUserId: user?.id };
+  // Only cache anonymous responses in shared caches — the page is personalized
+  // (isOwner actions, comment form vs. login prompt) once a viewer is logged in.
+  const cacheControl = user ? 'private, no-store' : 'public, max-age=60, stale-while-revalidate=300';
+
+  return data({ post, comments, url, currentUserId: user?.id }, { headers: { 'Cache-Control': cacheControl } });
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return buildOgMetaTags(loaderData.post, loaderData.url);
+}
+
+export function headers({ loaderHeaders }: Route.HeadersArgs): HeadersInit {
+  return { 'Cache-Control': loaderHeaders.get('Cache-Control') ?? 'private, no-store' };
 }
 
 export default function PostDetail({ loaderData }: Route.ComponentProps) {

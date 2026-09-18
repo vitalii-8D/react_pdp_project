@@ -1,10 +1,10 @@
 import type { Route } from './+types/my-posts.$postId.retry-payment';
-import { requireToken } from '../../lib/auth.server';
+import { requireTokenFromContext } from '../../lib/auth.server';
 import { retryPostPaymentMutation } from '../../lib/graphql/payments.server';
 import { toActionError } from '../../lib/graphql-client.server';
 
-export async function action({ request, params }: Route.ActionArgs) {
-  const token = await requireToken(request);
+export async function action({ params, context }: Route.ActionArgs) {
+  const token = requireTokenFromContext(context);
 
   try {
     const result = await retryPostPaymentMutation(token, params.postId);

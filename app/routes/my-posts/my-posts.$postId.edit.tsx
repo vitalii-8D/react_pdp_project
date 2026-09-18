@@ -3,7 +3,7 @@ import { redirect, useNavigation } from 'react-router';
 import { loadStripe } from '@stripe/stripe-js';
 
 import type { Route } from './+types/my-posts.$postId.edit';
-import { requireUser, requireToken } from '../../lib/auth.server';
+import { requireUserFromContext, requireTokenFromContext } from '../../lib/auth.server';
 import { categoriesQuery } from '../../lib/graphql/categories.server';
 import { postQuery, updatePostMutation, parsePostFormInput } from '../../lib/graphql/posts.server';
 import { publishPostMutation } from '../../lib/graphql/payments.server';
@@ -13,8 +13,8 @@ import { paths } from '../../lib/paths';
 import { PostStatus } from '../../enums/post-status.enum';
 import { PostForm } from '../../components/PostForm';
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const { token, user } = await requireUser(request);
+export async function loader({ request, params, context }: Route.LoaderArgs) {
+  const { token, user } = await requireUserFromContext(request, context);
   const [post, categories] = await Promise.all([postQuery(token, params.postId), categoriesQuery(token)]);
 
   if (post.author.id !== user.id) {
@@ -24,8 +24,8 @@ export async function loader({ request, params }: Route.LoaderArgs) {
   return { post, categories, stripePublishableKey: getStripePublishableKey() };
 }
 
-export async function action({ request, params }: Route.ActionArgs) {
-  const token = await requireToken(request);
+export async function action({ request, params, context }: Route.ActionArgs) {
+  const token = requireTokenFromContext(context);
   const formData = await request.formData();
   const input = await parsePostFormInput(token, formData);
   const publishing = input.status === PostStatus.PUBLISHED;

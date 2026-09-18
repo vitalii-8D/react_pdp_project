@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { Form, useFetcher, useSearchParams } from 'react-router';
 
 import type { Route } from './+types/posts';
-import { getOptionalUser } from '../../lib/auth.server';
+import { getOptionalUserFromContext } from '../../lib/auth.server';
 import { searchPostsQuery, type SearchPostsInput, type SearchPostsResult } from '../../lib/graphql/posts.server';
 import { categoriesQuery } from '../../lib/graphql/categories.server';
 import { PostCard } from '../../components/PostCard';
@@ -27,8 +27,8 @@ function decodeCursor(cursor: string | null): string[] | undefined {
   }
 }
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const { token, user } = await getOptionalUser(request);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const { token, user } = getOptionalUserFromContext(context);
   const params = new URL(request.url).searchParams;
 
   const q = params.get('q') ?? '';

@@ -17,7 +17,10 @@ interface UserSearchProps {
   startDmAction?: string;
 }
 
-export function UserSearch({ searchAction = paths.chatUsersSearch(), startDmAction = paths.chatStartDm() }: UserSearchProps) {
+export function UserSearch({
+  searchAction = paths.chatUsersSearch(),
+  startDmAction = paths.chatStartDm(),
+}: UserSearchProps) {
   const [query, setQuery] = useState('');
   const searchFetcher = useFetcher<SearchFetcherData>();
   const startDmFetcher = useFetcher();

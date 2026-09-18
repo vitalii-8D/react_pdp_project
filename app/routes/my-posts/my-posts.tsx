@@ -1,7 +1,7 @@
 import { Link } from 'react-router';
 
 import type { Route } from './+types/my-posts';
-import { requireUser } from '../../lib/auth.server';
+import { requireUserFromContext } from '../../lib/auth.server';
 import { myPostsQuery } from '../../lib/graphql/posts.server';
 import { getStripePublishableKey } from '../../lib/stripe.server';
 import { paths } from '../../lib/paths';
@@ -10,8 +10,8 @@ import { Icons } from '../../components/Icons';
 import { Card } from '../../components/Card';
 import { buttonStyles } from '../../components/Button';
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const { token, user } = await requireUser(request);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const { token, user } = await requireUserFromContext(request, context);
   const posts = await myPostsQuery(token);
 
   return { posts, currentUserId: user.id, stripePublishableKey: getStripePublishableKey() };

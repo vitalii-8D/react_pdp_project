@@ -1,7 +1,7 @@
 import { Link, useFetcher } from 'react-router';
 
 import type { Route } from './+types/profile';
-import { requireUser } from '../../lib/auth.server';
+import { requireUserFromContext } from '../../lib/auth.server';
 import { myTransactionsQuery } from '../../lib/graphql/payments.server';
 import { avatarUrl } from '../../lib/images';
 import { paths } from '../../lib/paths';
@@ -11,8 +11,8 @@ import { Button, buttonStyles } from '../../components/Button';
 import { PaymentTransactionStatus } from '../../enums/payment-status.enum';
 import type { PaymentTransactionEntity } from '../../lib/types';
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const { token, user } = await requireUser(request);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const { token, user } = await requireUserFromContext(request, context);
   const transactions = await myTransactionsQuery(token);
   return { user, transactions };
 }

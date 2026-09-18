@@ -39,7 +39,7 @@ export function PostCard({
 
   return (
     <Card className="p-6 sm:p-8 transition-all duration-300 hover:shadow-md hover:border-slate-300">
-      <Link to={paths.postDetail(post.id, post.slug)} className="block">
+      <Link to={paths.postDetail(post.id, post.slug)} prefetch="intent" className="block">
         <div className="flex justify-between items-start mb-4">
           <PostAuthorMeta
             author={post.author}

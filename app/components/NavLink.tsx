@@ -13,6 +13,7 @@ export function NavLink({ to, isActive, size = 'md', children }: NavLinkProps) {
   return (
     <Link
       to={to}
+      prefetch="intent"
       className={clsx(
         'flex items-center font-semibold rounded-xl transition-all',
         size === 'md' ? 'px-4 py-2 text-sm duration-200' : 'px-3 py-1.5 text-sm',

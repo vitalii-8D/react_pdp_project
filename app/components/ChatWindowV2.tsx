@@ -1,65 +1,21 @@
-import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type SubmitEvent } from 'react';
+import { useFetcher } from 'react-router';
 import { createClient, type Client } from 'graphql-ws';
 
-import { graphqlBrowserRequest } from '../lib/graphql-browser-client';
+import {
+  CHAT_MESSAGE_ADDED_SUBSCRIPTION,
+  CHAT_ROOM_PRESENCE_SUBSCRIPTION,
+  type ChatPresenceEvent,
+} from '../lib/graphql/chat-v2-browser';
+import { ChatFormField } from '../enums/chat-form-field.enum';
+import { paths } from '../lib/paths';
 import type { ChatMessageEntity, ChatRoomEntity } from '../lib/types';
 import { Button } from './Button';
 import { Card } from './Card';
 
-const CHAT_MESSAGE_ADDED_SUBSCRIPTION = /* GraphQL */ `
-  subscription ChatMessageAddedV2($roomId: ID!) {
-    chatMessageAdded(roomId: $roomId) {
-      id
-      message
-      userId
-      user {
-        id
-        name
-        email
-      }
-      roomId
-      createdAt
-      isAdminBroadcast
-    }
-  }
-`;
-
-const CHAT_ROOM_PRESENCE_SUBSCRIPTION = /* GraphQL */ `
-  subscription ChatRoomPresenceV2($roomId: ID!) {
-    chatRoomPresence(roomId: $roomId) {
-      type
-      roomId
-      userId
-      userName
-    }
-  }
-`;
-
-const SEND_CHAT_MESSAGE_MUTATION = /* GraphQL */ `
-  mutation SendChatMessageV2($input: SendMessageInput!) {
-    sendChatMessage(sendMessageInput: $input) {
-      id
-    }
-  }
-`;
-
-const ADMIN_BROADCAST_CHAT_MUTATION = /* GraphQL */ `
-  mutation AdminBroadcastChatV2($message: String!) {
-    adminBroadcastChat(message: $message) {
-      id
-    }
-  }
-`;
-
-interface ChatPresenceEvent {
-  type: 'JOINED' | 'LEFT';
-  roomId: string;
-  userId: string;
-  userName: string;
-}
+type ChatMutationResult = { error: string } | { ok: true };
 
 interface ChatWindowV2Props {
-  graphqlHttpUrl: string;
   graphqlWsUrl: string;
   token: string;
   room: ChatRoomEntity;
@@ -69,7 +25,6 @@ interface ChatWindowV2Props {
 }
 
 export function ChatWindowV2({
-  graphqlHttpUrl,
   graphqlWsUrl,
   token,
   room,
@@ -88,9 +43,15 @@ export function ChatWindowV2({
   const [presence, setPresence] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState('');
-  const [sending, setSending] = useState(false);
   const [broadcastDraft, setBroadcastDraft] = useState('');
-  const [broadcasting, setBroadcasting] = useState(false);
+
+  // Sending a message / broadcasting are route actions now (see chat-v2.$roomId.tsx and
+  // chat-v2.broadcast.tsx), so pending/error state comes from the fetchers instead of local
+  // `sending`/`broadcasting` flags and a hand-rolled `fetch` call.
+  const sendFetcher = useFetcher<ChatMutationResult>();
+  const broadcastFetcher = useFetcher<ChatMutationResult>();
+  const sending = sendFetcher.state !== 'idle';
+  const broadcasting = broadcastFetcher.state !== 'idle';
 
   useEffect(() => {
     const client = createClient({
@@ -153,7 +114,29 @@ export function ChatWindowV2({
     };
   }, [room.id]);
 
-  async function handleSendMessage(event: FormEvent<HTMLFormElement>) {
+  useEffect(() => {
+    if (sendFetcher.state !== 'idle' || !sendFetcher.data) {
+      return;
+    }
+    if ('error' in sendFetcher.data) {
+      setError(sendFetcher.data.error);
+    } else {
+      setDraft('');
+    }
+  }, [sendFetcher.state, sendFetcher.data]);
+
+  useEffect(() => {
+    if (broadcastFetcher.state !== 'idle' || !broadcastFetcher.data) {
+      return;
+    }
+    if ('error' in broadcastFetcher.data) {
+      setError(broadcastFetcher.data.error);
+    } else {
+      setBroadcastDraft('');
+    }
+  }, [broadcastFetcher.state, broadcastFetcher.data]);
+
+  function handleSendMessage(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const message = draft.trim();
     if (!message) {
@@ -161,21 +144,10 @@ export function ChatWindowV2({
     }
 
     setError(null);
-    setSending(true);
-
-    try {
-      await graphqlBrowserRequest(graphqlHttpUrl, token, SEND_CHAT_MESSAGE_MUTATION, {
-        input: { roomId: room.id, message },
-      });
-      setDraft('');
-    } catch (sendError) {
-      setError(sendError instanceof Error ? sendError.message : 'Could not send the message.');
-    } finally {
-      setSending(false);
-    }
+    void sendFetcher.submit({ [ChatFormField.Message]: message }, { method: 'post' });
   }
 
-  async function handleBroadcast(event: FormEvent<HTMLFormElement>) {
+  function handleBroadcast(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
     const message = broadcastDraft.trim();
     if (!message) {
@@ -183,16 +155,10 @@ export function ChatWindowV2({
     }
 
     setError(null);
-    setBroadcasting(true);
-
-    try {
-      await graphqlBrowserRequest(graphqlHttpUrl, token, ADMIN_BROADCAST_CHAT_MUTATION, { message });
-      setBroadcastDraft('');
-    } catch (broadcastError) {
-      setError(broadcastError instanceof Error ? broadcastError.message : 'Could not send the broadcast.');
-    } finally {
-      setBroadcasting(false);
-    }
+    void broadcastFetcher.submit(
+      { [ChatFormField.Message]: message },
+      { method: 'post', action: paths.chatV2Broadcast() },
+    );
   }
 
   return (
@@ -249,7 +215,7 @@ export function ChatWindowV2({
       </Card>
 
       <div className="shrink-0">
-        <form onSubmit={(event) => void handleSendMessage(event)} className="flex gap-2">
+        <form onSubmit={handleSendMessage} className="flex gap-2">
           <input
             value={draft}
             onChange={(event) => setDraft(event.target.value)}
@@ -265,7 +231,7 @@ export function ChatWindowV2({
       {isAdmin && !room.isDirect && (
         <Card className="p-4 space-y-2 bg-amber-50/50 border-amber-200 shrink-0">
           <p className="text-sm font-bold text-amber-900">Broadcast to all rooms</p>
-          <form onSubmit={(event) => void handleBroadcast(event)} className="flex gap-2">
+          <form onSubmit={handleBroadcast} className="flex gap-2">
             <input
               value={broadcastDraft}
               onChange={(event) => setBroadcastDraft(event.target.value)}

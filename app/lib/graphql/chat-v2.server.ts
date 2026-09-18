@@ -41,3 +41,27 @@ export async function chatRoomMessagesV2Query(token: string, roomId: string): Pr
 
   return data.chatRoomMessages.map((message) => ({ ...message, attachments: [] }));
 }
+
+export async function sendChatMessageV2Mutation(token: string, roomId: string, message: string): Promise<void> {
+  const query = gql`
+    mutation SendChatMessageV2($input: SendMessageInput!) {
+      sendChatMessage(sendMessageInput: $input) {
+        id
+      }
+    }
+  `;
+
+  await gqlRequest(query, { input: { roomId, message } }, token);
+}
+
+export async function adminBroadcastChatV2Mutation(token: string, message: string): Promise<void> {
+  const query = gql`
+    mutation AdminBroadcastChatV2($message: String!) {
+      adminBroadcastChat(message: $message) {
+        id
+      }
+    }
+  `;
+
+  await gqlRequest(query, { message }, token);
+}

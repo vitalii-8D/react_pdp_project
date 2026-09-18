@@ -1,13 +1,13 @@
 import { Link } from 'react-router';
 
 import type { Route } from './+types/payments.cancel';
-import { requireToken } from '../../lib/auth.server';
+import { requireTokenFromContext } from '../../lib/auth.server';
 import { paths } from '../../lib/paths';
 import { Card } from '../../components/Card';
 import { buttonStyles } from '../../components/Button';
 
-export async function loader({ request }: Route.LoaderArgs) {
-  await requireToken(request);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  requireTokenFromContext(context);
   const url = new URL(request.url);
   return { postId: url.searchParams.get('postId') };
 }

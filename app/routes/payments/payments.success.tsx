@@ -1,15 +1,15 @@
 import { Link, redirect } from 'react-router';
 
 import type { Route } from './+types/payments.success';
-import { requireToken } from '../../lib/auth.server';
+import { requireTokenFromContext } from '../../lib/auth.server';
 import { transactionsForPostQuery } from '../../lib/graphql/payments.server';
 import { PaymentTransactionStatus } from '../../enums/payment-status.enum';
 import { paths } from '../../lib/paths';
 import { Card } from '../../components/Card';
 import { buttonStyles } from '../../components/Button';
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const token = await requireToken(request);
+export async function loader({ request, context }: Route.LoaderArgs) {
+  const token = requireTokenFromContext(context);
   const url = new URL(request.url);
   const postId = url.searchParams.get('postId');
 

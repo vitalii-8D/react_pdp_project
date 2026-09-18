@@ -3,7 +3,7 @@ import { redirect, useNavigation } from 'react-router';
 import { loadStripe } from '@stripe/stripe-js';
 
 import type { Route } from './+types/my-posts.new';
-import { requireToken } from '../../lib/auth.server';
+import { requireTokenFromContext } from '../../lib/auth.server';
 import { categoriesQuery } from '../../lib/graphql/categories.server';
 import { createPostMutation, parsePostFormInput } from '../../lib/graphql/posts.server';
 import { publishPostMutation } from '../../lib/graphql/payments.server';
@@ -13,14 +13,14 @@ import { paths } from '../../lib/paths';
 import { PostStatus } from '../../enums/post-status.enum';
 import { PostForm } from '../../components/PostForm';
 
-export async function loader({ request }: Route.LoaderArgs) {
-  const token = await requireToken(request);
+export async function loader({ context }: Route.LoaderArgs) {
+  const token = requireTokenFromContext(context);
   const categories = await categoriesQuery(token);
   return { categories, stripePublishableKey: getStripePublishableKey() };
 }
 
-export async function action({ request }: Route.ActionArgs) {
-  const token = await requireToken(request);
+export async function action({ request, context }: Route.ActionArgs) {
+  const token = requireTokenFromContext(context);
   const formData = await request.formData();
   const input = await parsePostFormInput(token, formData);
   const publishing = input.status === PostStatus.PUBLISHED;

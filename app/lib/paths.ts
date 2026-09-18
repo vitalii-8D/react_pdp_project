@@ -28,6 +28,7 @@ export const paths = {
   chatV2Room: (id: string) => `/chat-v2/${id}`,
   chatV2UsersSearch: () => '/chat-v2/users/search',
   chatV2StartDm: () => '/chat-v2/dm',
+  chatV2Broadcast: () => '/chat-v2/broadcast',
   login: (from?: string) => (from ? `/login?from=${encodeURIComponent(from)}` : '/login'),
   logout: () => '/logout',
   register: (from?: string) => (from ? `/register?from=${encodeURIComponent(from)}` : '/register'),

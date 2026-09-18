@@ -1,36 +1,14 @@
-import { data } from 'react-router';
-
-import { chatRoomMessagesQuery, chatRoomQuery } from '../../lib/graphql/chat.server';
+import { chatRoomMessagesQuery } from '../../lib/graphql/chat.server';
 import type { Route } from './+types/chat.$roomId';
-import { requireUser } from '../../lib/auth.server';
-import { GqlRequestError } from '../../lib/graphql-client.server';
-import { getSocketUrl } from '../../lib/socket-url.server';
-import { UserRole } from '../../enums/user-role.enum';
+import { getSocketUrl } from '../../lib/chat-transport.server';
+import { loadChatRoom } from './chat-room.server';
 import { ChatWindow } from '../../components/ChatWindow';
 
-export async function loader({ request, params }: Route.LoaderArgs) {
-  const { token, user } = await requireUser(request);
-
-  let room;
-  try {
-    room = await chatRoomQuery(token, params.roomId);
-  } catch (error) {
-    if (error instanceof GqlRequestError) {
-      throw data(error.message, { status: error.status });
-    }
-    throw error;
-  }
-
+export async function loader({ request, params, context }: Route.LoaderArgs) {
+  const { token, room, currentUserId, isAdmin } = await loadChatRoom(request, context, params.roomId);
   const messages = await chatRoomMessagesQuery(token, params.roomId);
 
-  return {
-    token,
-    room,
-    messages,
-    currentUserId: user.id,
-    isAdmin: user.role === UserRole.ADMIN,
-    socketUrl: getSocketUrl(),
-  };
+  return { token, room, messages, currentUserId, isAdmin, socketUrl: getSocketUrl() };
 }
 
 export default function ChatRoom({ loaderData }: Route.ComponentProps) {

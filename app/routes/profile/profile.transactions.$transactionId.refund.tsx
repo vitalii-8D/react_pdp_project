@@ -1,10 +1,10 @@
 import type { Route } from './+types/profile.transactions.$transactionId.refund';
-import { requireToken } from '../../lib/auth.server';
+import { requireTokenFromContext } from '../../lib/auth.server';
 import { refundPaymentMutation } from '../../lib/graphql/payments.server';
 import { toActionError } from '../../lib/graphql-client.server';
 
-export async function action({ request, params }: Route.ActionArgs) {
-  const token = await requireToken(request);
+export async function action({ params, context }: Route.ActionArgs) {
+  const token = requireTokenFromContext(context);
 
   try {
     const transaction = await refundPaymentMutation(token, params.transactionId);
