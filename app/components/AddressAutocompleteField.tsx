@@ -2,9 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 import { useFetcher } from 'react-router';
 
 import { paths } from '../lib/paths';
+import { MIN_QUERY_LENGTH } from '../lib/search-constants';
 import type { AddressSuggestion } from '../routes/profile/profile.geocode';
 
-const MIN_QUERY_LENGTH = 3;
 const DEBOUNCE_MS = 500;
 
 interface AddressAutocompleteFieldProps {

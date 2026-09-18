@@ -1,7 +1,7 @@
 import type { Route } from './+types/profile.geocode';
 import { requireUserFromContext } from '../../lib/auth.server';
+import { MIN_QUERY_LENGTH } from '../../lib/search-constants';
 
-const MIN_QUERY_LENGTH = 3;
 const NOMINATIM_MIN_INTERVAL_MS = 1000;
 
 export interface AddressSuggestion {

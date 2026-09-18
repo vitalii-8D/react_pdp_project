@@ -10,6 +10,7 @@ import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { TextField } from '../../components/TextField';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
+import { MIN_QUERY_LENGTH } from '../../lib/search-constants';
 
 const READING_TIME_BUCKETS = [
   { label: 'Any length', value: '' },
@@ -32,6 +33,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const params = new URL(request.url).searchParams;
 
   const q = params.get('q') ?? '';
+  const isQueryTooShort = q.length > 0 && q.length < MIN_QUERY_LENGTH;
   const categories = params.getAll('category');
   const from = params.get('from') ?? '';
   const to = params.get('to') ?? '';
@@ -47,24 +49,33 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     ...(isCursorValid && { cursor: cursor! }),
   };
 
-  const [result, allCategories] = await Promise.all([searchPostsQuery(token, input), categoriesQuery(token)]);
+  const searchPromise: Promise<SearchPostsResult> = isQueryTooShort
+    ? Promise.resolve({ items: [], nextCursor: null })
+    : searchPostsQuery(token, input);
+
+  const [result, allCategories] = await Promise.all([searchPromise, categoriesQuery(token)]);
 
   return {
     result,
     allCategories,
     currentUserId: user?.id,
     filters: { q, categories, from, to, maxReading },
+    isQueryTooShort,
   };
 }
 
 export default function Posts({ loaderData }: Route.ComponentProps) {
-  const { result, allCategories, currentUserId, filters } = loaderData;
+  const { result, allCategories, currentUserId, filters, isQueryTooShort } = loaderData;
 
   const [searchParams] = useSearchParams();
   const fetcher = useFetcher<{ result: SearchPostsResult }>();
 
   const [items, setItems] = useState(result.items);
   const [nextCursor, setNextCursor] = useState(result.nextCursor);
+
+  const [queryDraft, setQueryDraft] = useState(filters.q);
+  const trimmedQueryDraft = queryDraft.trim();
+  const isSearchDisabled = trimmedQueryDraft.length > 0 && trimmedQueryDraft.length < MIN_QUERY_LENGTH;
 
   useEffect(() => {
     setItems(result.items);
@@ -96,21 +107,33 @@ export default function Posts({ loaderData }: Route.ComponentProps) {
       </div>
 
       <Card className="p-5 sm:p-6">
-        <Form method="get" className="space-y-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-grow">
-              <TextField
-                id="q"
-                label="Search"
-                name="q"
-                type="text"
-                defaultValue={filters.q}
-                placeholder="Search title, content, author..."
-              />
+        <Form
+          method="get"
+          className="space-y-4"
+          onSubmit={(event) => {
+            if (isSearchDisabled) event.preventDefault();
+          }}
+        >
+          <div className="space-y-1">
+            <div className="flex flex-col sm:flex-row gap-3">
+              <div className="flex-grow">
+                <TextField
+                  id="q"
+                  label="Search"
+                  name="q"
+                  type="text"
+                  value={queryDraft}
+                  onChange={(event) => setQueryDraft(event.target.value)}
+                  placeholder="Search title, content, author..."
+                />
+              </div>
+              <div className="flex items-end">
+                <Button type="submit" disabled={isSearchDisabled}>
+                  Search
+                </Button>
+              </div>
             </div>
-            <div className="flex items-end">
-              <Button type="submit">Search</Button>
-            </div>
+            <p className="text-xs text-slate-400">Type at least 3 characters to search.</p>
           </div>
 
           <div className="grid gap-4 sm:grid-cols-3">
@@ -159,7 +182,9 @@ export default function Posts({ loaderData }: Route.ComponentProps) {
 
       {items.length === 0 ? (
         <Card className="p-12 text-center">
-          <p className="text-slate-400 text-lg">No posts match your search.</p>
+          <p className="text-slate-400 text-lg">
+            {isQueryTooShort ? 'Type at least 3 characters to search.' : 'No posts match your search.'}
+          </p>
         </Card>
       ) : (
         <div className="space-y-6">

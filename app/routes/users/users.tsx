@@ -10,6 +10,7 @@ import { Card } from '../../components/Card';
 import { TextField } from '../../components/TextField';
 import { buttonStyles } from '../../components/Button';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
+import { MIN_QUERY_LENGTH } from '../../lib/search-constants';
 
 const RADIUS_OPTIONS = [
   { label: 'Any distance', value: '' },
@@ -23,6 +24,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const params = new URL(request.url).searchParams;
 
   const q = params.get('q') ?? '';
+  const isQueryTooShort = q.length > 0 && q.length < MIN_QUERY_LENGTH;
   const radiusKm = params.get('radiusKm') ?? '';
   const cursor = params.get('cursor') ?? '';
   const hasLocation = user.latitude != null && user.longitude != null;
@@ -33,19 +35,25 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     ...(cursor && { cursor }),
   };
 
-  const result = await searchUsersFullQuery(token, input);
+  const result: SearchUsersResult = isQueryTooShort
+    ? { items: [], nextCursor: null }
+    : await searchUsersFullQuery(token, input);
 
-  return { result, filters: { q, radiusKm }, hasLocation };
+  return { result, filters: { q, radiusKm }, hasLocation, isQueryTooShort };
 }
 
 export default function Users({ loaderData }: Route.ComponentProps) {
-  const { result, filters, hasLocation } = loaderData;
+  const { result, filters, hasLocation, isQueryTooShort } = loaderData;
 
   const [searchParams] = useSearchParams();
   const fetcher = useFetcher<{ result: SearchUsersResult }>();
 
   const [items, setItems] = useState(result.items);
   const [nextCursor, setNextCursor] = useState(result.nextCursor);
+
+  const [queryDraft, setQueryDraft] = useState(filters.q);
+  const trimmedQueryDraft = queryDraft.trim();
+  const isSearchDisabled = trimmedQueryDraft.length > 0 && trimmedQueryDraft.length < MIN_QUERY_LENGTH;
 
   useEffect(() => {
     setItems(result.items);
@@ -77,14 +85,21 @@ export default function Users({ loaderData }: Route.ComponentProps) {
       </div>
 
       <Card className="p-5 sm:p-6">
-        <Form method="get" className="flex flex-col sm:flex-row gap-3 sm:items-end">
+        <Form
+          method="get"
+          className="flex flex-col sm:flex-row gap-3 sm:items-end"
+          onSubmit={(event) => {
+            if (isSearchDisabled) event.preventDefault();
+          }}
+        >
           <div className="flex-grow">
             <TextField
               id="q"
               label="Search"
               name="q"
               type="text"
-              defaultValue={filters.q}
+              value={queryDraft}
+              onChange={(event) => setQueryDraft(event.target.value)}
               placeholder="Name, email, city..."
             />
           </div>
@@ -106,12 +121,13 @@ export default function Users({ loaderData }: Route.ComponentProps) {
               ))}
             </select>
           </div>
-          <button type="submit" className={buttonStyles()}>
+          <button type="submit" disabled={isSearchDisabled} className={buttonStyles()}>
             Search
           </button>
         </Form>
+        <p className="text-xs text-slate-400 mt-3">Type at least 3 characters to search.</p>
         {!hasLocation && (
-          <p className="text-xs text-slate-400 mt-3">
+          <p className="text-xs text-slate-400 mt-1">
             <Link to={paths.profileEdit()} className="text-blue-600 hover:underline">
               Add your location in your profile
             </Link>{' '}
@@ -122,7 +138,9 @@ export default function Users({ loaderData }: Route.ComponentProps) {
 
       {items.length === 0 ? (
         <Card className="p-12 text-center">
-          <p className="text-slate-400 text-lg">No users found.</p>
+          <p className="text-slate-400 text-lg">
+            {isQueryTooShort ? 'Type at least 3 characters to search.' : 'No users found.'}
+          </p>
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">

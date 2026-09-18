@@ -3,9 +3,9 @@ import { useFetcher } from 'react-router';
 
 import { ChatFormField } from '../enums/chat-form-field.enum';
 import { paths } from '../lib/paths';
+import { MIN_QUERY_LENGTH } from '../lib/search-constants';
 import type { ChatMessageUser } from '../lib/types';
 
-const MIN_QUERY_LENGTH = 3;
 const DEBOUNCE_MS = 300;
 
 interface SearchFetcherData {

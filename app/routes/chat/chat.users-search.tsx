@@ -1,8 +1,7 @@
 import type { Route } from './+types/chat.users-search';
 import { requireUserFromContext } from '../../lib/auth.server';
 import { searchUsersQuery } from '../../lib/graphql/users.server';
-
-const MIN_QUERY_LENGTH = 3;
+import { MIN_QUERY_LENGTH } from '../../lib/search-constants';
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { token } = await requireUserFromContext(request, context);
