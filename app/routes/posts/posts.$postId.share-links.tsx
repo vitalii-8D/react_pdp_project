@@ -11,6 +11,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 
   try {
     const shareLinks = await generateShareLinksQuery(token, url, params.postId);
+
     return { shareLinks };
   } catch (error) {
     return toActionError(error, 'Could not load share links.');

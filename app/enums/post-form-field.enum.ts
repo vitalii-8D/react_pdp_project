@@ -10,4 +10,5 @@ export enum PostFormField {
   ImageSizeBytes = 'imageSizeBytes',
   ImageOriginalFileName = 'imageOriginalFileName',
   ImageAlt = 'imageAlt',
+  RedirectTo = 'redirectTo',
 }

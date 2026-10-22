@@ -1,15 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useFetcher } from 'react-router';
 
 import { ChatFormField } from '../enums/chat-form-field.enum';
+import { useDebouncedValue } from '../hooks/useDebouncedValue';
 import { paths } from '../lib/paths';
 import { MIN_QUERY_LENGTH } from '../lib/search-constants';
-import type { ChatMessageUser } from '../lib/types';
+import type { UserEntity } from '../lib/types';
 
 const DEBOUNCE_MS = 300;
 
 interface SearchFetcherData {
-  users: ChatMessageUser[];
+  query: string;
+  users: UserEntity[];
+  error?: string;
 }
 
 interface UserSearchProps {
@@ -23,25 +26,26 @@ export function UserSearch({
 }: UserSearchProps) {
   const [query, setQuery] = useState('');
   const searchFetcher = useFetcher<SearchFetcherData>();
-  const startDmFetcher = useFetcher();
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const startDmFetcher = useFetcher<{ error?: string }>();
 
   const trimmedQuery = query.trim();
+  const debouncedQuery = useDebouncedValue(trimmedQuery, DEBOUNCE_MS);
+  const canSearch = debouncedQuery.length >= MIN_QUERY_LENGTH;
 
   useEffect(() => {
-    if (trimmedQuery.length < MIN_QUERY_LENGTH) {
-      return;
+    if (canSearch) {
+      searchFetcher.load(`${searchAction}?q=${encodeURIComponent(debouncedQuery)}`);
     }
+    // fetcher identity changes every render by design; only re-run when the query settles.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedQuery]);
 
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
-      searchFetcher.load(`${searchAction}?q=${encodeURIComponent(trimmedQuery)}`);
-    }, DEBOUNCE_MS);
-
-    return () => clearTimeout(debounceRef.current);
-  }, [trimmedQuery]);
-
-  const results = searchFetcher.data?.users ?? [];
+  // `searchFetcher.data` outlives the query it was loaded for - only show it while it still matches
+  // what is typed, so typing a new query never flashes a stale list.
+  const isCurrent = canSearch && debouncedQuery === trimmedQuery && searchFetcher.data?.query === trimmedQuery;
+  const results = isCurrent ? (searchFetcher.data?.users ?? []) : [];
+  const isSearching = searchFetcher.state === 'loading' || debouncedQuery !== trimmedQuery;
+  const error = (isCurrent ? searchFetcher.data?.error : undefined) ?? startDmFetcher.data?.error;
 
   function handleSelect(userId: string) {
     startDmFetcher.submit({ [ChatFormField.UserId]: userId }, { method: 'post', action: startDmAction });
@@ -56,12 +60,12 @@ export function UserSearch({
         className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
       />
 
+      {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+
       {trimmedQuery.length >= MIN_QUERY_LENGTH && (
         <div className="mt-2 border border-slate-200 rounded-xl overflow-hidden">
           {results.length === 0 ? (
-            <p className="px-4 py-3 text-sm text-slate-400">
-              {searchFetcher.state === 'loading' ? 'Searching...' : 'No users found.'}
-            </p>
+            <p className="px-4 py-3 text-sm text-slate-400">{isSearching ? 'Searching...' : 'No users found.'}</p>
           ) : (
             <ul className="divide-y divide-slate-100">
               {results.map((user) => (

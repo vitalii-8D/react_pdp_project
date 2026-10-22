@@ -5,5 +5,6 @@ export function safeRedirectPath(to: string | null | undefined, fallback = paths
   if (!to || !to.startsWith('/') || to.startsWith('//')) {
     return fallback;
   }
+
   return to;
 }

@@ -1,0 +1,23 @@
+mutation CreateChatRoom($createRoomInput: CreateRoomInput!) {
+  createChatRoom(createRoomInput: $createRoomInput) {
+    ...ChatRoomFields
+  }
+}
+
+mutation StartDirectMessage($userId: ID!) {
+  startDirectMessage(userId: $userId) {
+    ...ChatRoomFields
+  }
+}
+
+mutation SendChatMessage($input: SendMessageInput!) {
+  sendChatMessage(sendMessageInput: $input) {
+    id
+  }
+}
+
+mutation AdminBroadcastChat($message: String!) {
+  adminBroadcastChat(message: $message) {
+    id
+  }
+}

@@ -1,0 +1,14 @@
+subscription ChatMessageAdded($roomId: ID!) {
+  chatMessageAdded(roomId: $roomId) {
+    ...ChatMessageFields
+  }
+}
+
+subscription ChatRoomPresence($roomId: ID!) {
+  chatRoomPresence(roomId: $roomId) {
+    type
+    roomId
+    userId
+    userName
+  }
+}

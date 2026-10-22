@@ -2,6 +2,7 @@ import { isRouteErrorResponse, Outlet } from 'react-router';
 
 import type { Route } from './+types/app-layout';
 import { authMiddleware, getOptionalUserFromContext } from '../lib/auth.server';
+import { getStripePublishableKey } from '../lib/stripe.server';
 import { Header } from '../components/Header';
 import { Footer } from '../components/Footer';
 
@@ -9,7 +10,8 @@ export const middleware: Route.MiddlewareFunction[] = [authMiddleware];
 
 export async function loader({ context }: Route.LoaderArgs) {
   const { user } = getOptionalUserFromContext(context);
-  return { user };
+
+  return { user, stripePublishableKey: getStripePublishableKey() };
 }
 
 export default function AppLayout({ loaderData }: Route.ComponentProps) {

@@ -1,0 +1,64 @@
+# Everything the admin dashboard renders, in one round-trip.
+query AnalyticsPage($granularity: CommentPeriodGranularity!) {
+  analyticsDashboard {
+    userGrowth {
+      date
+      count
+    }
+    roleBreakdown {
+      role
+      online
+      offline
+    }
+    topCities {
+      term
+      count
+    }
+    geoClusters {
+      geohash
+      latitude
+      longitude
+      count
+    }
+    topRatedPosts {
+      postId
+      postTitle
+      averageRating
+      ratingCount
+    }
+    commentVelocity {
+      date
+      count
+      dailyChange
+    }
+    commenterSentiment {
+      userId
+      userName
+      positiveCount
+      criticalCount
+    }
+    negativeCommentTerms {
+      term
+      score
+      docCount
+    }
+  }
+  commentsPerPost {
+    postId
+    postTitle
+    count
+  }
+  commentsPerUser {
+    userId
+    userName
+    count
+  }
+  commentsPerPeriod(granularity: $granularity) {
+    period
+    count
+  }
+  commentRatingDistribution {
+    rating
+    count
+  }
+}

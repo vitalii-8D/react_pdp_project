@@ -8,6 +8,7 @@ export async function action({ params, context }: Route.ActionArgs) {
 
   try {
     const transaction = await refundPaymentMutation(token, params.transactionId);
+
     return { transaction };
   } catch (error) {
     return toActionError(error, 'Unable to process refund.');

@@ -1,0 +1,24 @@
+mutation CreatePost($createPostInput: CreatePostInput!) {
+  createPost(createPostInput: $createPostInput) {
+    ...PostFields
+  }
+}
+
+mutation UpdatePost($updatePostInput: UpdatePostInput!) {
+  updatePost(updatePostInput: $updatePostInput) {
+    ...PostFields
+  }
+}
+
+mutation RemovePost($id: ID!) {
+  removePost(id: $id) {
+    id
+  }
+}
+
+mutation IncrementPostViewCount($id: ID!) {
+  incrementPostViewCount(id: $id) {
+    id
+    viewCount
+  }
+}

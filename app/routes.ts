@@ -8,6 +8,7 @@ export default [
   layout('routes/app-layout.tsx', [
     index('routes/posts/posts.tsx'),
     route('posts/:postId/share-links', 'routes/posts/posts.$postId.share-links.tsx'),
+    route('posts/:postId/view', 'routes/posts/posts.$postId.view.tsx'),
     route('posts/:postId/comments', 'routes/posts/posts.$postId.comments.tsx'),
     route('posts/:postId/comments/:commentId', 'routes/posts/posts.$postId.comments.$commentId.tsx'),
     route('posts/:postId/comments/:commentId/destroy', 'routes/posts/posts.$postId.comments.$commentId.destroy.tsx'),

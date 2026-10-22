@@ -15,6 +15,7 @@ export function createStartDmAction(roomPath: (id: string) => string) {
 
     try {
       const room = await startDirectMessageMutation(token, userId);
+
       return redirect(roomPath(room.id));
     } catch (error) {
       return toActionError(error, 'Could not start the conversation.');

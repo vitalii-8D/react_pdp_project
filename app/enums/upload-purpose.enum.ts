@@ -1,5 +1,2 @@
-export enum UploadPurpose {
-  PostImage = 'POST_IMAGE',
-  UserAvatar = 'USER_AVATAR',
-  ChatAttachment = 'CHAT_ATTACHMENT',
-}
+// Generated from the GraphQL schema - see codegen.ts.
+export { UploadPurpose } from '../graphql/__generated__/graphql';

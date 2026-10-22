@@ -58,18 +58,22 @@ export function ImageUploadField({
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file) {
+      return;
+    }
 
     if (!ALLOWED_IMAGE_MIME_TYPES.includes(file.type)) {
       setStatus(Status.Error);
       setErrorMessage('Unsupported file type. Use JPEG, PNG, WebP or GIF.');
       event.target.value = '';
+
       return;
     }
     if (file.size > MAX_UPLOAD_SIZE_BYTES) {
       setStatus(Status.Error);
       setErrorMessage('File is too large. Max size is 5MB.');
       event.target.value = '';
+
       return;
     }
 

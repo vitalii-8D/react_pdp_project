@@ -1,0 +1,11 @@
+query MyTransactions {
+  myTransactions {
+    ...TransactionFields
+  }
+}
+
+query TransactionsForPost($postId: ID!) {
+  transactionsForPost(postId: $postId) {
+    ...TransactionFields
+  }
+}

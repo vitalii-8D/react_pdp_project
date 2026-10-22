@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import { useEffect, useRef } from 'react';
+import { useEffect, useEffectEvent, useRef } from 'react';
 import type { ReactNode } from 'react';
 
 const FOCUSABLE_SELECTOR = 'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
@@ -16,6 +16,9 @@ interface ModalProps {
 export function Modal({ open, onClose, role = 'dialog', ariaLabelledBy, className, children }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocused = useRef<HTMLElement | null>(null);
+  // Callers pass inline `onClose` arrows; reading it through an effect event keeps the effect keyed
+  // on `open` only, so a parent re-render doesn't tear down and re-run the focus handling.
+  const handleEscape = useEffectEvent(() => onClose());
 
   useEffect(() => {
     if (!open) {
@@ -29,7 +32,8 @@ export function Modal({ open, onClose, role = 'dialog', ariaLabelledBy, classNam
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
-        onClose();
+        handleEscape();
+
         return;
       }
       if (event.key !== 'Tab' || !panel) {
@@ -52,11 +56,12 @@ export function Modal({ open, onClose, role = 'dialog', ariaLabelledBy, classNam
     };
 
     document.addEventListener('keydown', handleKeyDown);
+
     return () => {
       document.removeEventListener('keydown', handleKeyDown);
       previouslyFocused.current?.focus();
     };
-  }, [open, onClose]);
+  }, [open]);
 
   if (!open) {
     return null;

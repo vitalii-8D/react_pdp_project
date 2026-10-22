@@ -132,12 +132,12 @@ export function PostForm({ categories, defaultValues, error, pending, cancelTo, 
         <select
           id="status"
           name={PostFormField.Status}
-          defaultValue={defaultValues?.status ?? PostStatus.DRAFT}
+          defaultValue={defaultValues?.status ?? PostStatus.Draft}
           className="w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
         >
-          <option value={PostStatus.DRAFT}>Draft</option>
-          <option value={PostStatus.PUBLISHED}>Published</option>
-          <option value={PostStatus.ARCHIVED}>Archived</option>
+          <option value={PostStatus.Draft}>Draft</option>
+          <option value={PostStatus.Published}>Published</option>
+          <option value={PostStatus.Archived}>Archived</option>
         </select>
       </div>
 

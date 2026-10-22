@@ -1,0 +1,6 @@
+query Categories {
+  categories {
+    ...CategoryFields
+    description
+  }
+}

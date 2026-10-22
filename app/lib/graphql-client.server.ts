@@ -1,5 +1,6 @@
 import { data } from 'react-router';
-import { GraphQLClient, ClientError, type Variables } from 'graphql-request';
+import { GraphQLClient, ClientError, type RequestOptions, type Variables } from 'graphql-request';
+import type { TypedDocumentNode } from '@graphql-typed-document-node/core';
 
 export function getServerUrl(): string {
   return process.env.SERVER_URL ?? 'http://localhost:3000';
@@ -41,13 +42,31 @@ function extractMessage(error: ClientError): {
   return { message, status };
 }
 
-export function toActionError(error: unknown, fallback = 'Something went wrong. Please try again.') {
-  return data({ error: error instanceof GqlRequestError ? error.message : fallback }, { status: 400 });
+// The backend's human-readable message for a failed request, or `fallback` for anything else
+// (network failures, bugs) - those details stay in the server logs, not in the UI.
+export function errorMessage(error: unknown, fallback = 'Something went wrong. Please try again.'): string {
+  return error instanceof GqlRequestError ? error.message : fallback;
 }
 
-export async function gqlRequest<T>(query: string, variables?: Variables, token?: string): Promise<T> {
+export function toActionError(error: unknown, fallback?: string) {
+  return data({ error: errorMessage(error, fallback) }, { status: 400 });
+}
+
+// Takes a generated `XxxDocument` (see app/graphql/, `npm run codegen`), so the result and variables
+// types are inferred from the operation instead of being hand-written at each call site.
+export async function gqlRequest<TResult, TVariables extends Variables>(
+  document: TypedDocumentNode<TResult, TVariables>,
+  variables?: TVariables,
+  token?: string,
+): Promise<TResult> {
+  const options = {
+    document,
+    variables,
+    requestHeaders: token ? { Authorization: `Bearer ${token}` } : undefined,
+  } as RequestOptions<Variables, TResult>;
+
   try {
-    return await client.request<T>(query, variables, token ? { Authorization: `Bearer ${token}` } : undefined);
+    return await client.request<TResult>(options);
   } catch (error) {
     if (error instanceof ClientError) {
       const { message, status } = extractMessage(error);

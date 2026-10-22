@@ -1,0 +1,14 @@
+query Me {
+  me {
+    ...CurrentUserFields
+  }
+}
+
+query SearchUsers($input: SearchUsersInput!) {
+  searchUsers(input: $input) {
+    items {
+      ...UserFields
+    }
+    nextCursor
+  }
+}

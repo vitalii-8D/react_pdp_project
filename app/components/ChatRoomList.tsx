@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Form, Link, useNavigation } from 'react-router';
 
 import { ChatFormField } from '../enums/chat-form-field.enum';
@@ -41,6 +42,14 @@ export function ChatRoomList({
 }: ChatRoomListProps) {
   const navigation = useNavigation();
   const pending = navigation.state === 'submitting';
+  const createFormRef = useRef<HTMLFormElement>(null);
+
+  // A created room shows up in the revalidated list - clear the form for the next one.
+  useEffect(() => {
+    if (actionData && 'ok' in actionData) {
+      createFormRef.current?.reset();
+    }
+  }, [actionData]);
 
   return (
     <div className="space-y-6">
@@ -78,6 +87,7 @@ export function ChatRoomList({
           <div className="space-y-3">
             {directRooms.map((room) => {
               const otherParticipant = room.participants.find((participant) => participant.id !== currentUserId);
+
               return (
                 <Link key={room.id} to={roomPath(room.id)}>
                   <Card className="p-4 hover:border-blue-200 hover:shadow-md transition-all">
@@ -95,7 +105,7 @@ export function ChatRoomList({
         <Card className="p-6 space-y-4">
           <h2 className="font-bold text-slate-900">Create a room</h2>
           {actionData && 'error' in actionData && <p className="text-sm text-red-600">{actionData.error}</p>}
-          <Form method="post" className="space-y-4">
+          <Form ref={createFormRef} method="post" className="space-y-4">
             <TextField id={`${formIdPrefix}-room-name`} name={ChatFormField.Name} label="Name" required />
             <TextField
               id={`${formIdPrefix}-room-description`}

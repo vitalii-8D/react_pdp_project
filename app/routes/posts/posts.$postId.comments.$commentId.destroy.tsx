@@ -10,6 +10,7 @@ export async function action({ params, context }: Route.ActionArgs) {
 
   try {
     await removeCommentMutation(token, params.commentId);
+
     return data({ ok: true });
   } catch (error) {
     return toActionError(error, 'Could not delete this comment.');

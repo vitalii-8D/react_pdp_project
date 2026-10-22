@@ -31,6 +31,7 @@ export function CommentForm({
   useEffect(() => {
     if (fetcher.state === 'submitting') {
       wasSubmitting.current = true;
+
       return;
     }
 

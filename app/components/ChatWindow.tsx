@@ -10,12 +10,6 @@ import { Button } from './Button';
 import { Card } from './Card';
 import { Icons } from './Icons';
 
-interface JoinedRoomPayload {
-  room: ChatRoomEntity;
-  messages: ChatMessageEntity[];
-  success: boolean;
-}
-
 interface PendingAttachment {
   key: string;
   url: string;
@@ -25,8 +19,13 @@ interface PendingAttachment {
 }
 
 function formatFileSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  if (bytes < 1024 * 1024) {
+    return `${(bytes / 1024).toFixed(1)} KB`;
+  }
+
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
@@ -108,34 +107,18 @@ export function ChatWindow({
   const [uploadingAttachment, setUploadingAttachment] = useState(false);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
 
+  // One effect owns the whole connection: connect, subscribe, join - and tear it all down together.
+  // The window is keyed by room (see chat.$roomId.tsx), and handlers only call state setters, so
+  // there are no changing callbacks to keep in refs.
   useEffect(() => {
     const socket = io(socketUrl, {
       extraHeaders: { Authorization: `Bearer ${token}` },
     });
     socketRef.current = socket;
+    const roomId = Number(room.id);
 
-    socket.on('connect', () => setConnected(true));
-    socket.on('disconnect', () => setConnected(false));
-
-    return () => {
-      socket.disconnect();
-      socketRef.current = null;
-    };
-  }, [socketUrl, token]);
-
-  useEffect(() => {
-    const socket = socketRef.current;
-    setMessages(initialMessages);
-    setPresence(null);
-    setError(null);
-
-    if (!socket) {
-      return;
-    }
-
-    const handleJoinedRoom = (payload: JoinedRoomPayload) => {
-      setMessages(payload.messages);
-    };
+    // `joinedRoom` also carries the room's history, but it is deliberately not applied: the backend
+    // loads it without attachments, while the history already in state (from the loader) has them.
     const handleNewMessage = (payload: ChatMessageEntity) => {
       setMessages((prev) => [...prev, payload]);
     };
@@ -160,7 +143,8 @@ export function ChatWindow({
       setError(payload.message);
     };
 
-    socket.on(ChatSocketEvent.JoinedRoom, handleJoinedRoom);
+    socket.on('connect', () => setConnected(true));
+    socket.on('disconnect', () => setConnected(false));
     socket.on(ChatSocketEvent.NewMessage, handleNewMessage);
     socket.on(ChatSocketEvent.UserJoined, handleUserJoined);
     socket.on(ChatSocketEvent.UserLeft, handleUserLeft);
@@ -168,19 +152,14 @@ export function ChatWindow({
     socket.on(ChatSocketEvent.BroadcastSent, handleBroadcastSent);
     socket.on(ChatSocketEvent.Error, handleError);
 
-    socket.emit(ChatSocketEvent.JoinRoom, { roomId: Number(room.id) });
+    socket.emit(ChatSocketEvent.JoinRoom, { roomId });
 
     return () => {
-      socket.emit(ChatSocketEvent.LeaveRoom, { roomId: Number(room.id) });
-      socket.off(ChatSocketEvent.JoinedRoom, handleJoinedRoom);
-      socket.off(ChatSocketEvent.NewMessage, handleNewMessage);
-      socket.off(ChatSocketEvent.UserJoined, handleUserJoined);
-      socket.off(ChatSocketEvent.UserLeft, handleUserLeft);
-      socket.off(ChatSocketEvent.MessageSent, handleMessageSent);
-      socket.off(ChatSocketEvent.BroadcastSent, handleBroadcastSent);
-      socket.off(ChatSocketEvent.Error, handleError);
+      socket.emit(ChatSocketEvent.LeaveRoom, { roomId });
+      socket.disconnect();
+      socketRef.current = null;
     };
-  }, [room.id]);
+  }, [socketUrl, token, room.id]);
 
   function handleSendMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -208,6 +187,7 @@ export function ChatWindow({
 
     if (file.size > MAX_CHAT_ATTACHMENT_SIZE_BYTES) {
       setAttachmentError(`File is too large. Max size is ${formatFileSize(MAX_CHAT_ATTACHMENT_SIZE_BYTES)}.`);
+
       return;
     }
 
@@ -298,8 +278,9 @@ export function ChatWindow({
         ) : (
           messages.map((message) => {
             const isOwn = message.userId === currentUserId;
+
             return (
-              <div key={message.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
+              <div key={message.id} className={`cv-auto-sm flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
                 <div
                   className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
                     message.isAdminBroadcast

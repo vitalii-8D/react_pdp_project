@@ -1,0 +1,27 @@
+mutation Login($loginInput: LoginInput!) {
+  login(loginInput: $loginInput) {
+    accessToken
+    user {
+      ...CurrentUserFields
+    }
+  }
+}
+
+mutation CreateUser($createUserInput: CreateUserInput!) {
+  createUser(createUserInput: $createUserInput) {
+    id
+  }
+}
+
+mutation UpdateUser($updateUserInput: UpdateUserInput!) {
+  updateUser(updateUserInput: $updateUserInput) {
+    ...UserFields
+  }
+}
+
+mutation UpdateAvatar($input: UserAvatarInput!) {
+  updateAvatar(input: $input) {
+    ...AvatarDetails
+    userId
+  }
+}

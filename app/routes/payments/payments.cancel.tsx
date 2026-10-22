@@ -9,6 +9,7 @@ import { buttonStyles } from '../../components/Button';
 export async function loader({ request, context }: Route.LoaderArgs) {
   requireTokenFromContext(context);
   const url = new URL(request.url);
+
   return { postId: url.searchParams.get('postId') };
 }
 

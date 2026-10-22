@@ -31,6 +31,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       fileName,
       contentType,
     });
+
     return data(payload);
   } catch (error) {
     return toActionError(error, 'Could not prepare the upload.');

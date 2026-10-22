@@ -1,0 +1,27 @@
+fragment TransactionFields on PaymentTransactionEntity {
+  id
+  status
+  amount
+  currency
+  stripePaymentIntentId
+  failureReason
+  refundedAt
+  createdAt
+  updatedAt
+  post {
+    id
+    title
+    slug
+  }
+}
+
+fragment PublishPostResultFields on PublishPostResult {
+  checkoutUrl
+  checkoutSessionId
+  post {
+    id
+    status
+    paymentStatus
+    hasBeenPublished
+  }
+}

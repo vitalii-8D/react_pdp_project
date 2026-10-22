@@ -1,233 +1,54 @@
-import { gql } from 'graphql-request';
-
 import { gqlRequest } from '../graphql-client.server';
-import type { AuthResponse, ChatMessageUser, UserEntity } from '../types';
+import {
+  CreateUserDocument,
+  LoginDocument,
+  MeDocument,
+  SearchUsersDocument,
+  UpdateAvatarDocument,
+  UpdateUserDocument,
+  type CreateUserInput,
+  type LoginMutation,
+  type SearchUsersQuery,
+  type UpdateUserInput,
+  type UserAvatarInput,
+} from '../../graphql/__generated__/graphql';
+import type { CurrentUser, SearchUsersInput, UserAvatarDetails, UserEntity } from '../types';
 
-const USER_FIELDS = gql`
-  fragment UserFields on UserEntity {
-    id
-    email
-    name
-    age
-    role
-    city
-    latitude
-    longitude
-    isOnline
-    createdAt
-    avatar {
-      id
-      url
-    }
-  }
-`;
+export type SearchUsersResult = Omit<SearchUsersQuery['searchUsers'], '__typename'>;
 
-export async function meQuery(token: string): Promise<UserEntity> {
-  const query = gql`
-    ${USER_FIELDS}
-    query Me {
-      me {
-        ...UserFields
-      }
-    }
-  `;
-
-  const data = await gqlRequest<{ me: UserEntity }>(query, undefined, token);
+// The signed-in user carries the full avatar record (the profile edit form needs key/mime/size to
+// keep the current image), so the auth middleware's `me` is the single source of the current user
+// and no route has to fetch it again.
+export async function meQuery(token: string): Promise<CurrentUser> {
+  const data = await gqlRequest(MeDocument, {}, token);
 
   return data.me;
 }
 
-export interface UserAvatarDetails {
-  id: string;
-  key: string;
-  url: string;
-  originalFileName: string;
-  mimeType: string;
-  sizeBytes: number;
-}
-
-export async function meWithAvatarQuery(token: string): Promise<UserEntity & { avatar?: UserAvatarDetails | null }> {
-  const query = gql`
-    ${USER_FIELDS}
-    query MeWithAvatar {
-      me {
-        ...UserFields
-        avatar {
-          id
-          key
-          url
-          originalFileName
-          mimeType
-          sizeBytes
-        }
-      }
-    }
-  `;
-
-  const data = await gqlRequest<{
-    me: UserEntity & { avatar?: UserAvatarDetails | null };
-  }>(query, undefined, token);
-
-  return data.me;
-}
-
-export async function loginMutation(email: string, password: string): Promise<AuthResponse> {
-  const query = gql`
-    ${USER_FIELDS}
-    mutation Login($loginInput: LoginInput!) {
-      login(loginInput: $loginInput) {
-        accessToken
-        user {
-          ...UserFields
-        }
-      }
-    }
-  `;
-
-  const data = await gqlRequest<{ login: AuthResponse }>(query, {
-    loginInput: { email, password },
-  });
+export async function loginMutation(email: string, password: string): Promise<LoginMutation['login']> {
+  const data = await gqlRequest(LoginDocument, { loginInput: { email, password } });
 
   return data.login;
 }
 
-export async function usersQuery(token: string): Promise<UserEntity[]> {
-  const query = gql`
-    ${USER_FIELDS}
-    query Users {
-      users {
-        ...UserFields
-      }
-    }
-  `;
-
-  const data = await gqlRequest<{ users: UserEntity[] }>(query, undefined, token);
-
-  return data.users;
-}
-
-export async function searchUsersQuery(token: string, query: string): Promise<ChatMessageUser[]> {
-  const gqlQuery = gql`
-    query SearchUsers($input: SearchUsersInput!) {
-      searchUsers(input: $input) {
-        items {
-          id
-          name
-          email
-        }
-      }
-    }
-  `;
-
-  const data = await gqlRequest<{ searchUsers: { items: ChatMessageUser[] } }>(gqlQuery, { input: { query } }, token);
-
-  return data.searchUsers.items;
-}
-
-export interface SearchUsersInput {
-  query?: string;
-  useMyLocation?: boolean;
-  radiusKm?: number;
-  cursor?: string;
-  limit?: number;
-}
-
-export interface SearchUsersResult {
-  items: UserEntity[];
-  nextCursor?: string | null;
-}
-
-export async function searchUsersFullQuery(token: string, input: SearchUsersInput): Promise<SearchUsersResult> {
-  const query = gql`
-    ${USER_FIELDS}
-    query SearchUsersFull($input: SearchUsersInput!) {
-      searchUsers(input: $input) {
-        items {
-          ...UserFields
-        }
-        nextCursor
-      }
-    }
-  `;
-
-  const data = await gqlRequest<{ searchUsers: SearchUsersResult }>(query, { input }, token);
+export async function searchUsersQuery(token: string, input: SearchUsersInput): Promise<SearchUsersResult> {
+  const data = await gqlRequest(SearchUsersDocument, { input }, token);
 
   return data.searchUsers;
 }
 
-export interface CreateUserInput {
-  name: string;
-  email: string;
-  password: string;
-  age?: number;
-}
-
-export async function createUserMutation(input: CreateUserInput): Promise<UserEntity> {
-  const query = gql`
-    ${USER_FIELDS}
-    mutation CreateUser($createUserInput: CreateUserInput!) {
-      createUser(createUserInput: $createUserInput) {
-        ...UserFields
-      }
-    }
-  `;
-
-  const data = await gqlRequest<{ createUser: UserEntity }>(query, {
-    createUserInput: input,
-  });
-
-  return data.createUser;
-}
-
-export interface UpdateUserInput {
-  id: string;
-  name?: string;
-  email?: string;
-  password?: string;
-  age?: number;
-  city?: string;
-  latitude?: number;
-  longitude?: number;
+export async function createUserMutation(input: CreateUserInput): Promise<void> {
+  await gqlRequest(CreateUserDocument, { createUserInput: input });
 }
 
 export async function updateUserMutation(token: string, input: UpdateUserInput): Promise<UserEntity> {
-  const query = gql`
-    ${USER_FIELDS}
-    mutation UpdateUser($updateUserInput: UpdateUserInput!) {
-      updateUser(updateUserInput: $updateUserInput) {
-        ...UserFields
-      }
-    }
-  `;
-
-  const data = await gqlRequest<{ updateUser: UserEntity }>(query, { updateUserInput: input }, token);
+  const data = await gqlRequest(UpdateUserDocument, { updateUserInput: input }, token);
 
   return data.updateUser;
 }
 
-export interface UserAvatarInput {
-  key: string;
-  url: string;
-  originalFileName: string;
-  mimeType: string;
-  sizeBytes: number;
-}
-
 export async function updateAvatarMutation(token: string, input: UserAvatarInput): Promise<UserAvatarDetails> {
-  const query = gql`
-    mutation UpdateAvatar($input: UserAvatarInput!) {
-      updateAvatar(input: $input) {
-        id
-        key
-        url
-        originalFileName
-        mimeType
-        sizeBytes
-      }
-    }
-  `;
-
-  const data = await gqlRequest<{ updateAvatar: UserAvatarDetails }>(query, { input }, token);
+  const data = await gqlRequest(UpdateAvatarDocument, { input }, token);
 
   return data.updateAvatar;
 }

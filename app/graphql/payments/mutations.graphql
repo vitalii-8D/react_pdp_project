@@ -1,0 +1,17 @@
+mutation PublishPost($postId: ID!) {
+  publishPost(postId: $postId) {
+    ...PublishPostResultFields
+  }
+}
+
+mutation RetryPostPayment($postId: ID!) {
+  retryPostPayment(postId: $postId) {
+    ...PublishPostResultFields
+  }
+}
+
+mutation RefundPayment($transactionId: ID!) {
+  refundPayment(transactionId: $transactionId) {
+    ...TransactionFields
+  }
+}

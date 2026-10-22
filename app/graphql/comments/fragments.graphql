@@ -1,0 +1,17 @@
+fragment CommentFields on CommentEntity {
+  id
+  content
+  rating
+  postId
+  authorId
+  createdAt
+  updatedAt
+  author {
+    id
+    name
+    avatar {
+      id
+      url
+    }
+  }
+}

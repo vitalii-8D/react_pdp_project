@@ -20,7 +20,8 @@ interface CommentItemProps {
 export function CommentItem({ comment, postId, currentUserId }: CommentItemProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const fetcher = useFetcher();
+  const fetcher = useFetcher<{ ok?: boolean; error?: string }>();
+  const deleteError = fetcher.state === 'idle' ? fetcher.data?.error : undefined;
   const isOwnComment = comment.author.id === currentUserId;
 
   if (isEditing) {
@@ -77,6 +78,7 @@ export function CommentItem({ comment, postId, currentUserId }: CommentItemProps
       </div>
 
       <p className="text-sm text-slate-600 mt-2 whitespace-pre-line">{comment.content}</p>
+      {deleteError && <p className="text-xs text-red-600 mt-1">{deleteError}</p>}
 
       <ConfirmDialog
         open={confirmOpen}

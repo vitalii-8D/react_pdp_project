@@ -1,0 +1,23 @@
+query MyPosts {
+  me {
+    id
+    posts {
+      ...PostFields
+    }
+  }
+}
+
+query Post($id: ID!) {
+  post(id: $id) {
+    ...PostFields
+  }
+}
+
+query SearchPosts($input: SearchPostsInput!) {
+  searchPosts(input: $input) {
+    items {
+      ...PostFields
+    }
+    nextCursor
+  }
+}

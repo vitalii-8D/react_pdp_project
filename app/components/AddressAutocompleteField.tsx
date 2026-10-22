@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useFetcher } from 'react-router';
 
 import { paths } from '../lib/paths';
@@ -38,7 +38,9 @@ export function AddressAutocompleteField({
   );
   const [showSuggestions, setShowSuggestions] = useState(false);
   const geocodeFetcher = useFetcher<GeocodeFetcherData>();
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  // Suggestions the user typed below the search threshold on - hidden so they don't reappear once
+  // the text is long enough again (a new load replaces them).
+  const [dismissedData, setDismissedData] = useState<GeocodeFetcherData | undefined>(undefined);
 
   const trimmedCity = city.trim();
 
@@ -47,15 +49,19 @@ export function AddressAutocompleteField({
       return;
     }
 
-    clearTimeout(debounceRef.current);
-    debounceRef.current = setTimeout(() => {
+    // A newer load aborts the one still in flight, so suggestions for text the user has already
+    // typed past never land.
+    const timeout = setTimeout(() => {
       geocodeFetcher.load(`${paths.profileGeocode()}?q=${encodeURIComponent(trimmedCity)}`);
     }, DEBOUNCE_MS);
 
-    return () => clearTimeout(debounceRef.current);
-  }, [trimmedCity]);
+    return () => clearTimeout(timeout);
+    // fetcher identity changes every render by design; only re-run when the text changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [trimmedCity, defaultCity]);
 
-  const suggestions = geocodeFetcher.data?.suggestions ?? [];
+  const suggestions =
+    geocodeFetcher.data && geocodeFetcher.data !== dismissedData ? geocodeFetcher.data.suggestions : [];
 
   function handleSelect(suggestion: AddressSuggestion) {
     setCity(suggestion.city);
@@ -77,6 +83,10 @@ export function AddressAutocompleteField({
           setCity(event.target.value);
           setCoords(undefined);
           setShowSuggestions(true);
+          // Too short to search: drop the old suggestions so they don't reappear once it's long enough.
+          if (event.target.value.trim().length < MIN_QUERY_LENGTH) {
+            setDismissedData(geocodeFetcher.data);
+          }
         }}
         onFocus={() => setShowSuggestions(true)}
         onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}

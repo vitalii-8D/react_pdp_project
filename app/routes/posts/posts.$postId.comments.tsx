@@ -14,6 +14,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   try {
     await createCommentMutation(token, { postId: params.postId, content, rating });
+
     return data({ ok: true });
   } catch (error) {
     return toActionError(error, 'Could not post your comment.');

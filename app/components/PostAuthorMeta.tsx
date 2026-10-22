@@ -1,9 +1,9 @@
 import { avatarUrl } from '../lib/images';
 import { formatDate } from '../lib/format';
-import type { UserEntity } from '../lib/types';
+import type { PostAuthor } from '../lib/types';
 
 interface PostAuthorMetaProps {
-  author: UserEntity;
+  author: PostAuthor;
   createdAt: string;
   readingTimeMinutes?: number;
   viewCount?: number;

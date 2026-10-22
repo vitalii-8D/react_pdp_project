@@ -6,10 +6,14 @@ export function useInfiniteScroll(onIntersect: () => void, enabled: boolean) {
   onIntersectRef.current = onIntersect;
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      return;
+    }
 
     const sentinel = sentinelRef.current;
-    if (!sentinel) return;
+    if (!sentinel) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {

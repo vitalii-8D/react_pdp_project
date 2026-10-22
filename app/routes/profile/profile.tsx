@@ -14,6 +14,7 @@ import type { PaymentTransactionEntity } from '../../lib/types';
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { token, user } = await requireUserFromContext(request, context);
   const transactions = await myTransactionsQuery(token);
+
   return { user, transactions };
 }
 
@@ -36,7 +37,8 @@ function formatAmount(amount: number, currency: string): string {
 }
 
 function TransactionRow({ transaction }: { transaction: PaymentTransactionEntity }) {
-  const fetcher = useFetcher();
+  const fetcher = useFetcher<{ error?: string }>();
+  const refundError = fetcher.state === 'idle' ? fetcher.data?.error : undefined;
   const canRefund = transaction.status === PaymentTransactionStatus.Succeeded;
 
   return (
@@ -47,6 +49,7 @@ function TransactionRow({ transaction }: { transaction: PaymentTransactionEntity
         {transaction.status === PaymentTransactionStatus.Failed && transaction.failureReason && (
           <p className="text-xs text-red-500 mt-0.5">{transaction.failureReason}</p>
         )}
+        {refundError && <p className="text-xs text-red-500 mt-0.5">{refundError}</p>}
       </div>
       <div className="flex items-center gap-3 shrink-0">
         <span className="text-sm font-bold text-slate-800">

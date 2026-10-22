@@ -1,0 +1,54 @@
+fragment PostAuthor on UserEntity {
+  id
+  name
+  email
+  avatar {
+    id
+    url
+  }
+}
+
+fragment PostFields on PostEntity {
+  id
+  title
+  content
+  slug
+  status
+  viewCount
+  readingTimeMinutes
+  commentCount
+  averageRating
+  hasBeenPublished
+  paymentStatus
+  createdAt
+  updatedAt
+  authorId
+  author {
+    ...PostAuthor
+  }
+  categories {
+    ...CategoryFields
+  }
+  # Beyond the cover image (`image`/`imageAlt`), these fields feed the post page's SSR <meta> tags
+  # (see lib/meta.ts) - the one selection the CSR sibling doesn't need.
+  openGraphMetadata {
+    id
+    title
+    description
+    image
+    imageAlt
+    author
+    siteName
+    tags
+    publishedTime
+  }
+  postImage {
+    id
+    key
+    url
+    originalFileName
+    mimeType
+    sizeBytes
+    altText
+  }
+}

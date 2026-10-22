@@ -1,13 +1,15 @@
-import { useEffect, useRef, useState, type SubmitEvent } from 'react';
+import { useEffect, useState, type SubmitEvent } from 'react';
 import { useFetcher } from 'react-router';
-import { createClient, type Client } from 'graphql-ws';
+import { createClient } from 'graphql-ws';
 
 import {
   CHAT_MESSAGE_ADDED_SUBSCRIPTION,
   CHAT_ROOM_PRESENCE_SUBSCRIPTION,
-  type ChatPresenceEvent,
+  type ChatMessageAddedSubscription,
+  type ChatRoomPresenceSubscription,
 } from '../lib/graphql/chat-v2-browser';
 import { ChatFormField } from '../enums/chat-form-field.enum';
+import { ChatPresenceEventType } from '../enums/chat-presence-event-type.enum';
 import { paths } from '../lib/paths';
 import type { ChatMessageEntity, ChatRoomEntity } from '../lib/types';
 import { Button } from './Button';
@@ -37,7 +39,6 @@ export function ChatWindowV2({
     : undefined;
   const displayName = otherParticipant?.name ?? room.name;
 
-  const clientRef = useRef<Client | null>(null);
   const [messages, setMessages] = useState<ChatMessageEntity[]>(initialMessages);
   const [connected, setConnected] = useState(false);
   const [presence, setPresence] = useState<string | null>(null);
@@ -53,6 +54,9 @@ export function ChatWindowV2({
   const sending = sendFetcher.state !== 'idle';
   const broadcasting = broadcastFetcher.state !== 'idle';
 
+  // One effect owns the whole connection: create the client, subscribe to the room, and dispose of
+  // everything together. The window is keyed by room (see chat-v2.$roomId.tsx), and the handlers
+  // only call state setters, so there are no changing callbacks to keep in refs.
   useEffect(() => {
     const client = createClient({
       url: graphqlWsUrl,
@@ -62,38 +66,26 @@ export function ChatWindowV2({
         closed: () => setConnected(false),
       },
     });
-    clientRef.current = client;
+    const handleSubscriptionError = (err: unknown) =>
+      setError(err instanceof Error ? err.message : 'Subscription error.');
 
-    return () => {
-      void client.dispose();
-      clientRef.current = null;
-    };
-  }, [graphqlWsUrl, token]);
-
-  useEffect(() => {
-    const client = clientRef.current;
-    setMessages(initialMessages);
-    setPresence(null);
-    setError(null);
-
-    if (!client) {
-      return;
-    }
-
-    const unsubscribeMessages = client.subscribe<{ chatMessageAdded: ChatMessageEntity }>(
+    const unsubscribeMessages = client.subscribe<ChatMessageAddedSubscription>(
       { query: CHAT_MESSAGE_ADDED_SUBSCRIPTION, variables: { roomId: room.id } },
       {
         next: ({ data }) => {
-          if (data) {
-            setMessages((prev) => [...prev, data.chatMessageAdded]);
+          const added = data?.chatMessageAdded;
+          if (!added) {
+            return;
           }
+          // A reconnect can replay a message the history already holds.
+          setMessages((prev) => (prev.some((message) => message.id === added.id) ? prev : [...prev, added]));
         },
-        error: (err) => setError(err instanceof Error ? err.message : 'Subscription error.'),
+        error: handleSubscriptionError,
         complete: () => {},
       },
     );
 
-    const unsubscribePresence = client.subscribe<{ chatRoomPresence: ChatPresenceEvent }>(
+    const unsubscribePresence = client.subscribe<ChatRoomPresenceSubscription>(
       { query: CHAT_ROOM_PRESENCE_SUBSCRIPTION, variables: { roomId: room.id } },
       {
         next: ({ data }) => {
@@ -101,9 +93,9 @@ export function ChatWindowV2({
             return;
           }
           const { type, userName } = data.chatRoomPresence;
-          setPresence(`${userName} ${type === 'JOINED' ? 'joined' : 'left'} the room`);
+          setPresence(`${userName} ${type === ChatPresenceEventType.Joined ? 'joined' : 'left'} the room`);
         },
-        error: (err) => setError(err instanceof Error ? err.message : 'Subscription error.'),
+        error: handleSubscriptionError,
         complete: () => {},
       },
     );
@@ -111,8 +103,9 @@ export function ChatWindowV2({
     return () => {
       unsubscribeMessages();
       unsubscribePresence();
+      void client.dispose();
     };
-  }, [room.id]);
+  }, [graphqlWsUrl, token, room.id]);
 
   useEffect(() => {
     if (sendFetcher.state !== 'idle' || !sendFetcher.data) {
@@ -191,8 +184,9 @@ export function ChatWindowV2({
         ) : (
           messages.map((message) => {
             const isOwn = message.userId === currentUserId;
+
             return (
-              <div key={message.id} className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
+              <div key={message.id} className={`cv-auto-sm flex flex-col ${isOwn ? 'items-end' : 'items-start'}`}>
                 <div
                   className={`max-w-[75%] rounded-2xl px-4 py-2 text-sm ${
                     message.isAdminBroadcast

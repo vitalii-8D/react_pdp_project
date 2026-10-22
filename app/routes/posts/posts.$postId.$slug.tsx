@@ -1,9 +1,11 @@
-import { data, Link } from 'react-router';
+import { useEffect, useRef } from 'react';
+import { data, Link, useFetcher } from 'react-router';
 
 import type { Route } from './+types/posts.$postId.$slug';
 import { getOptionalUserFromContext } from '../../lib/auth.server';
-import { postQuery, incrementPostViewCountMutation } from '../../lib/graphql/posts.server';
+import { postQuery } from '../../lib/graphql/posts.server';
 import { commentsByPostQuery } from '../../lib/graphql/comments.server';
+import { errorMessage } from '../../lib/graphql-client.server';
 import { Icons } from '../../components/Icons';
 import { PostAuthorMeta } from '../../components/PostAuthorMeta';
 import { CategoryList } from '../../components/CategoryList';
@@ -11,25 +13,32 @@ import { PostActionsBar } from '../../components/PostActionsBar';
 import { CommentList } from '../../components/CommentList';
 import { CommentForm } from '../../components/CommentForm';
 import { Card } from '../../components/Card';
+import { ErrorMessage } from '../../components/PageStatus';
 import { getSiteUrl } from '../../lib/site-url.server';
 import { paths } from '../../lib/paths';
 import { buildOgMetaTags } from '../../lib/meta';
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const { token, user } = getOptionalUserFromContext(context);
-  const post = await postQuery(token, params.postId);
-  const comments = await commentsByPostQuery(post.id, token);
+  // Post and comments load in parallel and independently: a failed comments request still renders
+  // the post, with the error in place of the list.
+  const [post, commentsResult] = await Promise.all([
+    postQuery(token, params.postId),
+    commentsByPostQuery(params.postId, token).then(
+      (comments) => ({ comments, commentsError: undefined }),
+      (error: unknown) => ({ comments: undefined, commentsError: errorMessage(error, 'Could not load comments.') }),
+    ),
+  ]);
   const url = `${getSiteUrl()}${paths.postDetail(post.id, post.slug)}`;
-
-  // Fire-and-forget: view count is a soft engagement signal, not worth
-  // delaying the page render or failing the request over.
-  void incrementPostViewCountMutation(post.id).catch(() => {});
 
   // Only cache anonymous responses in shared caches — the page is personalized
   // (isOwner actions, comment form vs. login prompt) once a viewer is logged in.
   const cacheControl = user ? 'private, no-store' : 'public, max-age=60, stale-while-revalidate=300';
 
-  return data({ post, comments, url, currentUserId: user?.id }, { headers: { 'Cache-Control': cacheControl } });
+  return data(
+    { post, ...commentsResult, url, currentUserId: user?.id },
+    { headers: { 'Cache-Control': cacheControl } },
+  );
 }
 
 export function meta({ loaderData }: Route.MetaArgs) {
@@ -41,9 +50,24 @@ export function headers({ loaderHeaders }: Route.HeadersArgs): HeadersInit {
 }
 
 export default function PostDetail({ loaderData }: Route.ComponentProps) {
-  const { post, comments, currentUserId } = loaderData;
+  const { post, comments, commentsError, currentUserId } = loaderData;
   const isOwner = post.author.id === currentUserId;
   const coverImage = post.openGraphMetadata?.image;
+
+  // One view per post visit, counted from the browser rather than the loader - the loader re-runs
+  // on every revalidation (each comment action) and would count those too. Guarded so StrictMode's
+  // effect re-run doesn't count twice, and it doesn't revalidate this page (nothing shown changes).
+  const viewFetcher = useFetcher();
+  const countedPostId = useRef<string | null>(null);
+  useEffect(() => {
+    if (countedPostId.current === post.id) {
+      return;
+    }
+    countedPostId.current = post.id;
+    void viewFetcher.submit(null, { method: 'post', action: paths.postView(post.id), defaultShouldRevalidate: false });
+    // fetcher identity changes every render by design; only re-run for another post.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [post.id]);
 
   return (
     <div className="space-y-6">
@@ -81,7 +105,15 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
 
         <CategoryList categories={post.categories} />
 
-        <PostActionsBar postId={post.id} postSlug={post.slug} postTitle={post.title} isOwner={isOwner} />
+        <PostActionsBar
+          postId={post.id}
+          postSlug={post.slug}
+          postTitle={post.title}
+          isOwner={isOwner}
+          status={post.status}
+          paymentStatus={post.paymentStatus}
+          navigateAfterDelete
+        />
       </Card>
 
       <Card className="p-6 sm:p-8 space-y-4">
@@ -96,7 +128,11 @@ export default function PostDetail({ loaderData }: Route.ComponentProps) {
           </p>
         )}
 
-        <CommentList comments={comments} postId={post.id} currentUserId={currentUserId} />
+        {commentsError ? (
+          <ErrorMessage message={commentsError} />
+        ) : (
+          comments && <CommentList comments={comments} postId={post.id} currentUserId={currentUserId} />
+        )}
       </Card>
     </div>
   );

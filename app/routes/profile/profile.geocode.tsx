@@ -38,15 +38,20 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   lastCallAt = Date.now();
 
   const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&addressdetails=1&limit=5&q=${encodeURIComponent(q)}`;
-  const response = await fetch(url, {
-    headers: { 'User-Agent': process.env.NOMINATIM_USER_AGENT ?? 'PostShare/1.0' },
-  });
-
-  if (!response.ok) {
+  let results: NominatimResult[];
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': process.env.NOMINATIM_USER_AGENT ?? 'PostShare/1.0' },
+    });
+    if (!response.ok) {
+      return { suggestions: [] as AddressSuggestion[] };
+    }
+    results = (await response.json()) as NominatimResult[];
+  } catch {
+    // Suggestions are optional - a failed lookup just leaves the free-text field as is.
     return { suggestions: [] as AddressSuggestion[] };
   }
 
-  const results = (await response.json()) as NominatimResult[];
   const suggestions: AddressSuggestion[] = results.map((result) => ({
     label: result.display_name,
     city: result.address?.city ?? result.address?.town ?? result.address?.village ?? result.display_name,

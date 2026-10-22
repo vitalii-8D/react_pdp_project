@@ -1,14 +1,2 @@
-export enum PaymentTransactionStatus {
-  Pending = 'PENDING',
-  Succeeded = 'SUCCEEDED',
-  Failed = 'FAILED',
-  Refunded = 'REFUNDED',
-}
-
-export enum PostPaymentStatus {
-  NotRequired = 'NOT_REQUIRED',
-  Pending = 'PENDING',
-  Succeeded = 'SUCCEEDED',
-  Failed = 'FAILED',
-  Refunded = 'REFUNDED',
-}
+// Generated from the GraphQL schema - see codegen.ts.
+export { PaymentTransactionStatus, PostPaymentStatus } from '../graphql/__generated__/graphql';

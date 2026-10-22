@@ -1,3 +1,4 @@
+import { memo } from 'react';
 import { Link } from 'react-router';
 
 import { PostAuthorMeta } from './PostAuthorMeta';
@@ -24,21 +25,15 @@ const PAYMENT_STATUS_LABEL: Record<PostPaymentStatus, string> = {
   [PostPaymentStatus.NotRequired]: '',
 };
 
-export function PostCard({
-  post,
-  currentUserId,
-  stripePublishableKey,
-}: {
-  post: PostEntity;
-  currentUserId?: string;
-  stripePublishableKey?: string;
-}) {
+// Memoized: the feeds append "load more" pages with `setItems(prev => [...prev, ...more])`, which
+// keeps existing `post` objects stable - so already-rendered cards skip re-rendering.
+export const PostCard = memo(function PostCard({ post, currentUserId }: { post: PostEntity; currentUserId?: string }) {
   const isOwner = post.author.id === currentUserId;
   const coverImage = post.openGraphMetadata?.image;
   const showPaymentBadge = isOwner && post.paymentStatus !== PostPaymentStatus.NotRequired;
 
   return (
-    <Card className="p-6 sm:p-8 transition-all duration-300 hover:shadow-md hover:border-slate-300">
+    <Card className="cv-auto p-6 sm:p-8 transition-all duration-300 hover:shadow-md hover:border-slate-300">
       <Link to={paths.postDetail(post.id, post.slug)} prefetch="intent" className="block">
         <div className="flex justify-between items-start mb-4">
           <PostAuthorMeta
@@ -86,8 +81,7 @@ export function PostCard({
         isOwner={isOwner}
         status={post.status}
         paymentStatus={post.paymentStatus}
-        stripePublishableKey={stripePublishableKey}
       />
     </Card>
   );
-}
+});

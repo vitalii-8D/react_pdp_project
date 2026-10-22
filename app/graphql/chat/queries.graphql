@@ -1,0 +1,20 @@
+query ChatRooms {
+  chatRooms {
+    ...ChatRoomFields
+  }
+  myDirectMessageRooms {
+    ...ChatRoomFields
+  }
+}
+
+query ChatRoom($id: ID!) {
+  chatRoom(id: $id) {
+    ...ChatRoomFields
+  }
+}
+
+query ChatRoomMessages($roomId: ID!) {
+  chatRoomMessages(roomId: $roomId) {
+    ...ChatMessageFields
+  }
+}

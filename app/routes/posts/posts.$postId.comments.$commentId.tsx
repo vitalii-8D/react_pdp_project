@@ -14,6 +14,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   try {
     await updateCommentMutation(token, { id: params.commentId, content, rating });
+
     return data({ ok: true });
   } catch (error) {
     return toActionError(error, 'Could not update your comment.');

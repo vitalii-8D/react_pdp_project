@@ -1,7 +1,7 @@
 import { data, type ActionFunctionArgs, type LoaderFunctionArgs } from 'react-router';
 
 import { requireUserFromContext } from '../../lib/auth.server';
-import { chatRoomsQuery, createChatRoomMutation, myDirectMessageRoomsQuery } from '../../lib/graphql/chat.server';
+import { chatRoomsQuery, createChatRoomMutation } from '../../lib/graphql/chat.server';
 import { toActionError } from '../../lib/graphql-client.server';
 import { ChatFormField } from '../../enums/chat-form-field.enum';
 import { UserRole } from '../../enums/user-role.enum';
@@ -10,19 +10,19 @@ import { UserRole } from '../../enums/user-role.enum';
 // action are identical for both transports (only the JSX copy/paths differ, see ChatRoomList).
 export async function loader({ request, context }: LoaderFunctionArgs) {
   const { token, user } = await requireUserFromContext(request, context);
-  const [rooms, directRooms] = await Promise.all([chatRoomsQuery(token), myDirectMessageRoomsQuery(token)]);
+  const { chatRooms, myDirectMessageRooms } = await chatRoomsQuery(token);
 
   return {
-    rooms,
-    directRooms,
+    rooms: chatRooms,
+    directRooms: myDirectMessageRooms,
     currentUserId: user.id,
-    isAdmin: user.role === UserRole.ADMIN,
+    isAdmin: user.role === UserRole.Admin,
   };
 }
 
 export async function action({ request, context }: ActionFunctionArgs) {
   const { token, user } = await requireUserFromContext(request, context);
-  if (user.role !== UserRole.ADMIN) {
+  if (user.role !== UserRole.Admin) {
     return data({ error: 'Only admins can create rooms.' }, { status: 403 });
   }
 
@@ -35,6 +35,7 @@ export async function action({ request, context }: ActionFunctionArgs) {
       name,
       ...(description && { description }),
     });
+
     return { ok: true as const };
   } catch (error) {
     return toActionError(error, 'Could not create the room.');

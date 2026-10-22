@@ -16,14 +16,9 @@ import {
 
 import type { Route } from './+types/analytics';
 import { requireUserFromContext } from '../../lib/auth.server';
-import { analyticsDashboardQuery } from '../../lib/graphql/analytics.server';
-import {
-  commentsPerPostQuery,
-  commentsPerUserQuery,
-  commentsPerPeriodQuery,
-  commentRatingDistributionQuery,
-} from '../../lib/graphql/comments.server';
+import { analyticsPageQuery } from '../../lib/graphql/analytics.server';
 import { UserRole } from '../../enums/user-role.enum';
+import { CommentPeriodGranularity } from '../../enums/comment-period-granularity.enum';
 import { paths } from '../../lib/paths';
 import { Card } from '../../components/Card';
 
@@ -42,17 +37,17 @@ const axisTickStyle = { fontSize: 12, fill: MUTED };
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { token, user } = await requireUserFromContext(request, context);
-  if (user.role !== UserRole.ADMIN) {
+  if (user.role !== UserRole.Admin) {
     throw redirect(paths.posts());
   }
 
-  const [dashboard, commentsPerPost, commentsPerUser, commentsPerDay, ratingDistribution] = await Promise.all([
-    analyticsDashboardQuery(token),
-    commentsPerPostQuery(token),
-    commentsPerUserQuery(token),
-    commentsPerPeriodQuery(token, 'DAY'),
-    commentRatingDistributionQuery(token),
-  ]);
+  const {
+    analyticsDashboard: dashboard,
+    commentsPerPost,
+    commentsPerUser,
+    commentsPerPeriod: commentsPerDay,
+    commentRatingDistribution: ratingDistribution,
+  } = await analyticsPageQuery(token, CommentPeriodGranularity.Day);
 
   return { dashboard, commentsPerPost, commentsPerUser, commentsPerDay, ratingDistribution };
 }
@@ -83,8 +78,12 @@ function formatDate(value: string) {
 export default function Analytics({ loaderData }: Route.ComponentProps) {
   const { dashboard, commentsPerPost, commentsPerUser, commentsPerDay, ratingDistribution } = loaderData;
 
-  const totalUsers = dashboard.roleBreakdown.reduce((sum, row) => sum + row.online + row.offline, 0);
-  const onlineNow = dashboard.roleBreakdown.reduce((sum, row) => sum + row.online, 0);
+  let totalUsers = 0;
+  let onlineNow = 0;
+  for (const row of dashboard.roleBreakdown) {
+    totalUsers += row.online + row.offline;
+    onlineNow += row.online;
+  }
 
   const userGrowthData = dashboard.userGrowth.map((point) => ({ ...point, label: formatDate(point.date) }));
   const velocityData = dashboard.commentVelocity.map((point) => ({ ...point, label: formatDate(point.date) }));
@@ -296,6 +295,7 @@ export default function Analytics({ loaderData }: Route.ComponentProps) {
               const total = row.positiveCount + row.criticalCount || 1;
               const positivePct = (row.positiveCount / total) * 100;
               const criticalPct = (row.criticalCount / total) * 100;
+
               return (
                 <div key={row.userId}>
                   <div className="flex justify-between text-xs text-slate-500 mb-0.5">

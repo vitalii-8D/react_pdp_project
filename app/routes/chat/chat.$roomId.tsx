@@ -12,5 +12,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
 }
 
 export default function ChatRoom({ loaderData }: Route.ComponentProps) {
-  return <ChatWindow {...loaderData} />;
+  // Keyed by room: switching rooms remounts the window, so its local state (messages, drafts,
+  // presence) starts fresh from props instead of being reset in an effect.
+  return <ChatWindow key={loaderData.room.id} {...loaderData} />;
 }

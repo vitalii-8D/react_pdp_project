@@ -1,0 +1,4 @@
+fragment CategoryFields on CategoryEntity {
+  id
+  name
+}

@@ -3,14 +3,17 @@ import { Form, Link, useFetcher, useSearchParams } from 'react-router';
 
 import type { Route } from './+types/users';
 import { requireUserFromContext } from '../../lib/auth.server';
-import { searchUsersFullQuery, type SearchUsersInput, type SearchUsersResult } from '../../lib/graphql/users.server';
+import { searchUsersQuery, type SearchUsersResult } from '../../lib/graphql/users.server';
+import { errorMessage } from '../../lib/graphql-client.server';
 import { avatarUrl } from '../../lib/images';
 import { paths } from '../../lib/paths';
 import { Card } from '../../components/Card';
 import { TextField } from '../../components/TextField';
 import { buttonStyles } from '../../components/Button';
+import { ErrorMessage } from '../../components/PageStatus';
 import { useInfiniteScroll } from '../../hooks/useInfiniteScroll';
 import { MIN_QUERY_LENGTH } from '../../lib/search-constants';
+import type { SearchUsersInput } from '../../lib/types';
 
 const RADIUS_OPTIONS = [
   { label: 'Any distance', value: '' },
@@ -19,6 +22,19 @@ const RADIUS_OPTIONS = [
   { label: 'Within 100 km', value: '100' },
 ];
 
+function decodeCursor(cursor: string | null): string[] | undefined {
+  if (!cursor) {
+    return undefined;
+  }
+  try {
+    const parsed: unknown = JSON.parse(atob(cursor));
+
+    return Array.isArray(parsed) ? (parsed as string[]) : undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export async function loader({ request, context }: Route.LoaderArgs) {
   const { token, user } = await requireUserFromContext(request, context);
   const params = new URL(request.url).searchParams;
@@ -26,30 +42,54 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const q = params.get('q') ?? '';
   const isQueryTooShort = q.length > 0 && q.length < MIN_QUERY_LENGTH;
   const radiusKm = params.get('radiusKm') ?? '';
-  const cursor = params.get('cursor') ?? '';
+  const cursor = params.get('cursor');
   const hasLocation = user.latitude != null && user.longitude != null;
 
-  const input: SearchUsersInput = {
+  const searchInput: SearchUsersInput = {
     ...(q && { query: q }),
     ...(radiusKm && hasLocation && { useMyLocation: true, radiusKm: Number(radiusKm) }),
-    ...(cursor && { cursor }),
   };
 
-  const result: SearchUsersResult = isQueryTooShort
-    ? { items: [], nextCursor: null }
-    : await searchUsersFullQuery(token, input);
+  async function searchUsers(): Promise<{ result: SearchUsersResult; error?: string }> {
+    if (isQueryTooShort) {
+      return { result: { items: [], nextCursor: null } };
+    }
 
-  return { result, filters: { q, radiusKm }, hasLocation, isQueryTooShort };
+    try {
+      // A shared link can carry a starting cursor; it is only sent if it decodes to a valid one.
+      return {
+        result: await searchUsersQuery(token, { ...searchInput, ...(decodeCursor(cursor) && { cursor: cursor! }) }),
+      };
+    } catch (error) {
+      return {
+        result: { items: [], nextCursor: null },
+        error: errorMessage(error, 'Could not load users.'),
+      };
+    }
+  }
+
+  const { result, error } = await searchUsers();
+
+  return {
+    result,
+    error,
+    // The search a page of results belongs to - see the posts feed for why it's needed.
+    requestKey: `${JSON.stringify(searchInput)}:${user.id}`,
+    filters: { q, radiusKm },
+    hasLocation,
+    isQueryTooShort,
+  };
 }
 
 export default function Users({ loaderData }: Route.ComponentProps) {
-  const { result, filters, hasLocation, isQueryTooShort } = loaderData;
+  const { result, error, requestKey, filters, hasLocation, isQueryTooShort } = loaderData;
 
   const [searchParams] = useSearchParams();
-  const fetcher = useFetcher<{ result: SearchUsersResult }>();
+  const fetcher = useFetcher<typeof loader>();
 
   const [items, setItems] = useState(result.items);
   const [nextCursor, setNextCursor] = useState(result.nextCursor);
+  const [loadMoreError, setLoadMoreError] = useState<string | undefined>(undefined);
 
   const [queryDraft, setQueryDraft] = useState(filters.q);
   const trimmedQueryDraft = queryDraft.trim();
@@ -58,19 +98,29 @@ export default function Users({ loaderData }: Route.ComponentProps) {
   useEffect(() => {
     setItems(result.items);
     setNextCursor(result.nextCursor);
+    setLoadMoreError(undefined);
   }, [result]);
 
   useEffect(() => {
-    if (fetcher.data && fetcher.state === 'idle') {
-      setItems((prev) => [...prev, ...fetcher.data!.result.items]);
-      setNextCursor(fetcher.data!.result.nextCursor);
+    if (!fetcher.data || fetcher.state !== 'idle' || fetcher.data.requestKey !== requestKey) {
+      return;
     }
+    if (fetcher.data.error) {
+      setLoadMoreError(fetcher.data.error);
+
+      return;
+    }
+    setItems((prev) => [...prev, ...fetcher.data!.result.items]);
+    setNextCursor(fetcher.data.result.nextCursor);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fetcher.data]);
 
-  const canLoadMore = Boolean(nextCursor) && fetcher.state === 'idle';
+  // A failed page stops the auto-loading - otherwise the still-visible sentinel would retry it in a loop.
+  const canLoadMore = Boolean(nextCursor) && fetcher.state === 'idle' && !loadMoreError;
   const loadMore = () => {
-    if (!nextCursor || fetcher.state !== 'idle') return;
+    if (!nextCursor || fetcher.state !== 'idle') {
+      return;
+    }
     const nextParams = new URLSearchParams(searchParams);
     nextParams.set('cursor', nextCursor);
     fetcher.load(`?${nextParams.toString()}`);
@@ -89,7 +139,9 @@ export default function Users({ loaderData }: Route.ComponentProps) {
           method="get"
           className="flex flex-col sm:flex-row gap-3 sm:items-end"
           onSubmit={(event) => {
-            if (isSearchDisabled) event.preventDefault();
+            if (isSearchDisabled) {
+              event.preventDefault();
+            }
           }}
         >
           <div className="flex-grow">
@@ -136,7 +188,9 @@ export default function Users({ loaderData }: Route.ComponentProps) {
         )}
       </Card>
 
-      {items.length === 0 ? (
+      {error ? (
+        <ErrorMessage message={error} />
+      ) : items.length === 0 ? (
         <Card className="p-12 text-center">
           <p className="text-slate-400 text-lg">
             {isQueryTooShort ? 'Type at least 3 characters to search.' : 'No users found.'}
@@ -145,7 +199,7 @@ export default function Users({ loaderData }: Route.ComponentProps) {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {items.map((user) => (
-            <Card key={user.id} className="p-5 flex items-center space-x-4">
+            <Card key={user.id} className="cv-auto-sm p-5 flex items-center space-x-4">
               <div className="relative shrink-0">
                 <img
                   className="h-12 w-12 rounded-full object-cover ring-2 ring-slate-100"
@@ -169,6 +223,7 @@ export default function Users({ loaderData }: Route.ComponentProps) {
         </div>
       )}
 
+      {loadMoreError && <ErrorMessage message={loadMoreError} />}
       <div ref={sentinelRef} />
       {fetcher.state !== 'idle' && <p className="text-center text-sm text-slate-400 py-2">Loading more…</p>}
     </div>

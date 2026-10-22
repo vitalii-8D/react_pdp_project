@@ -1,0 +1,32 @@
+# Comment mutations also return the post's server-recomputed aggregates - Apollo merges them into
+# the normalized PostEntity, so every view of that post updates without a refetch.
+fragment CommentPostAggregates on PostEntity {
+  id
+  commentCount
+  averageRating
+}
+
+mutation CreateComment($createCommentInput: CreateCommentInput!) {
+  createComment(createCommentInput: $createCommentInput) {
+    ...CommentFields
+    post {
+      ...CommentPostAggregates
+    }
+  }
+}
+
+mutation UpdateComment($updateCommentInput: UpdateCommentInput!) {
+  updateComment(updateCommentInput: $updateCommentInput) {
+    ...CommentFields
+    post {
+      ...CommentPostAggregates
+    }
+  }
+}
+
+mutation RemoveComment($id: ID!) {
+  removeComment(id: $id) {
+    id
+    postId
+  }
+}

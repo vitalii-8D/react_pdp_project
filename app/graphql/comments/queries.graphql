@@ -1,0 +1,5 @@
+query CommentsByPost($postId: ID!) {
+  commentsByPost(postId: $postId) {
+    ...CommentFields
+  }
+}

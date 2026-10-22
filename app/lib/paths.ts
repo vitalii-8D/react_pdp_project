@@ -1,6 +1,7 @@
 export const paths = {
   posts: () => '/',
   postDetail: (id: string, slug: string) => `/posts/${id}/${slug}`,
+  postView: (id: string) => `/posts/${id}/view`,
   postShareLinks: (id: string, slug: string) => `/posts/${id}/share-links?slug=${encodeURIComponent(slug)}`,
   postComments: (postId: string) => `/posts/${postId}/comments`,
   postCommentEdit: (postId: string, commentId: string) => `/posts/${postId}/comments/${commentId}`,

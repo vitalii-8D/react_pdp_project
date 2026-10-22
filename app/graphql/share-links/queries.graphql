@@ -1,0 +1,9 @@
+query GenerateShareLinks($url: String!, $postId: ID) {
+  generateShareLinks(url: $url, postId: $postId) {
+    facebook
+    twitter
+    linkedin
+    telegram
+    whatsapp
+  }
+}

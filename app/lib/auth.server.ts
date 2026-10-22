@@ -5,7 +5,7 @@ import { meQuery } from './graphql/users.server';
 import { GqlRequestError } from './graphql-client.server';
 import { paths } from './paths';
 import { authContext } from './auth-context.server';
-import type { UserEntity } from './types';
+import type { CurrentUser } from './types';
 
 type AuthContext = Readonly<RouterContextProvider>;
 
@@ -15,7 +15,7 @@ export async function getToken(request: Request): Promise<string | undefined> {
   return session.get(SESSION_TOKEN_KEY);
 }
 
-export async function getOptionalUser(request: Request): Promise<{ token?: string; user?: UserEntity }> {
+export async function getOptionalUser(request: Request): Promise<{ token?: string; user?: CurrentUser }> {
   const token = await getToken(request);
   if (!token) {
     return {};
@@ -23,6 +23,7 @@ export async function getOptionalUser(request: Request): Promise<{ token?: strin
 
   try {
     const user = await meQuery(token);
+
     return { token, user };
   } catch (error) {
     if (error instanceof GqlRequestError && error.status === 401) {
@@ -36,6 +37,7 @@ export async function authMiddleware({ request, context }: { request: Request; c
   const token = await getToken(request);
   if (!token) {
     context.set(authContext, {});
+
     return;
   }
 
@@ -45,14 +47,16 @@ export async function authMiddleware({ request, context }: { request: Request; c
   } catch (error) {
     if (error instanceof GqlRequestError && error.status === 401) {
       context.set(authContext, { invalidSession: true });
+
       return;
     }
     throw error;
   }
 }
 
-export function getOptionalUserFromContext(context: AuthContext): { token?: string; user?: UserEntity } {
+export function getOptionalUserFromContext(context: AuthContext): { token?: string; user?: CurrentUser } {
   const { token, user } = context.get(authContext);
+
   return { token, user };
 }
 
@@ -68,7 +72,7 @@ export function requireTokenFromContext(context: AuthContext): string {
 export async function requireUserFromContext(
   request: Request,
   context: AuthContext,
-): Promise<{ token: string; user: UserEntity }> {
+): Promise<{ token: string; user: CurrentUser }> {
   const { token, user, invalidSession } = context.get(authContext);
 
   if (token && user) {

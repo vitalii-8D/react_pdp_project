@@ -1,0 +1,35 @@
+fragment ChatRoomFields on ChatRoomEntity {
+  id
+  name
+  description
+  isDirect
+  participants {
+    ...UserSummary
+  }
+  createdAt
+  updatedAt
+}
+
+fragment ChatAttachmentFields on ChatAttachmentEntity {
+  id
+  key
+  url
+  originalFileName
+  mimeType
+  sizeBytes
+}
+
+fragment ChatMessageFields on ChatMessageEntity {
+  id
+  message
+  userId
+  user {
+    ...UserSummary
+  }
+  roomId
+  createdAt
+  isAdminBroadcast
+  attachments {
+    ...ChatAttachmentFields
+  }
+}

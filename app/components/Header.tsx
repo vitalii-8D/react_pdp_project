@@ -13,11 +13,12 @@ export function Header({ user }: { user?: UserEntity }) {
   const location = useLocation();
   const isMyPosts = location.pathname.startsWith(paths.myPosts());
   const isPosts = location.pathname === paths.posts();
-  const isChat = location.pathname.startsWith(paths.chat());
+  // Exact segment match - a plain prefix check would also light up Chat on /chat-v2.
+  const isChat = location.pathname === paths.chat() || location.pathname.startsWith(`${paths.chat()}/`);
   const isChatV2 = location.pathname.startsWith(paths.chatV2());
   const isUsers = location.pathname.startsWith(paths.users());
   const isAnalytics = location.pathname.startsWith(paths.analytics());
-  const isAdmin = user?.role === UserRole.ADMIN;
+  const isAdmin = user?.role === UserRole.Admin;
   const loginHref = paths.login(location.pathname + location.search);
 
   return (

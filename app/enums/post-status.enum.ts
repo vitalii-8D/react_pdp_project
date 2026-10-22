@@ -1,5 +1,2 @@
-export enum PostStatus {
-  DRAFT = 'DRAFT',
-  PUBLISHED = 'PUBLISHED',
-  ARCHIVED = 'ARCHIVED',
-}
+// Generated from the GraphQL schema - see codegen.ts.
+export { PostStatus } from '../graphql/__generated__/graphql';

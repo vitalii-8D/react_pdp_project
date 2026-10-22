@@ -1,0 +1,40 @@
+fragment UserFields on UserEntity {
+  id
+  email
+  name
+  age
+  role
+  city
+  latitude
+  longitude
+  isOnline
+  createdAt
+  avatar {
+    id
+    url
+  }
+}
+
+fragment AvatarDetails on UserAvatarEntity {
+  id
+  key
+  url
+  originalFileName
+  mimeType
+  sizeBytes
+}
+
+# The signed-in user carries the full avatar record (the profile edit form needs key/mime/size to
+# keep the current image), so both `me` and `login` select it.
+fragment CurrentUserFields on UserEntity {
+  ...UserFields
+  avatar {
+    ...AvatarDetails
+  }
+}
+
+fragment UserSummary on UserEntity {
+  id
+  name
+  email
+}

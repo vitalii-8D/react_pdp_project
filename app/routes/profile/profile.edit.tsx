@@ -3,7 +3,7 @@ import { redirect, Form, Link, useNavigation } from 'react-router';
 
 import type { Route } from './+types/profile.edit';
 import { requireUserFromContext } from '../../lib/auth.server';
-import { meWithAvatarQuery, updateUserMutation, updateAvatarMutation } from '../../lib/graphql/users.server';
+import { updateUserMutation, updateAvatarMutation } from '../../lib/graphql/users.server';
 import { toActionError } from '../../lib/graphql-client.server';
 import { AuthFormField } from '../../enums/auth-form-field.enum';
 import { AvatarFormField } from '../../enums/avatar-form-field.enum';
@@ -16,8 +16,9 @@ import { ImageUploadField } from '../../components/ImageUploadField';
 import { Button, buttonStyles } from '../../components/Button';
 
 export async function loader({ request, context }: Route.LoaderArgs) {
-  const { token } = await requireUserFromContext(request, context);
-  const user = await meWithAvatarQuery(token);
+  // The auth middleware's user already carries the full avatar record - no need to fetch `me` again.
+  const { user } = await requireUserFromContext(request, context);
+
   return { user };
 }
 
@@ -47,10 +48,11 @@ export async function action({ request, context }: Route.ActionArgs) {
       ...(password ? { password } : {}),
     });
 
-    if (avatarKey) {
+    // Only a newly uploaded image changes the avatar - an untouched field still posts the current key.
+    if (avatarKey && avatarKey !== user.avatar?.key) {
+      // The public URL stays in the form only for the preview - `UserAvatarInput` has no `url`.
       await updateAvatarMutation(token, {
         key: avatarKey,
-        url: String(formData.get(AvatarFormField.AvatarUrl) ?? '').trim(),
         mimeType: String(formData.get(AvatarFormField.AvatarMimeType) ?? '').trim(),
         sizeBytes: Number(formData.get(AvatarFormField.AvatarSizeBytes) ?? 0),
         originalFileName: String(formData.get(AvatarFormField.AvatarOriginalFileName) ?? '').trim(),

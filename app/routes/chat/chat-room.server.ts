@@ -30,5 +30,5 @@ export async function loadChatRoom(
     throw error;
   }
 
-  return { token, room, currentUserId: user.id, isAdmin: user.role === UserRole.ADMIN };
+  return { token, room, currentUserId: user.id, isAdmin: user.role === UserRole.Admin };
 }

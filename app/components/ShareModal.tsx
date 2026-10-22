@@ -9,6 +9,15 @@ import type { ShareLinks } from '../lib/types';
 
 const COPY_FEEDBACK_MS = 1500;
 
+// Static per-platform metadata; only the URL comes from the server response.
+const PLATFORMS = [
+  { key: SocialPlatform.Facebook, label: 'Facebook', Icon: Icons.Facebook },
+  { key: SocialPlatform.Twitter, label: 'Twitter / X', Icon: Icons.Twitter },
+  { key: SocialPlatform.LinkedIn, label: 'LinkedIn', Icon: Icons.LinkedIn },
+  { key: SocialPlatform.Telegram, label: 'Telegram', Icon: Icons.Telegram },
+  { key: SocialPlatform.Whatsapp, label: 'Whatsapp', Icon: Icons.Whatsapp },
+];
+
 interface ShareModalProps {
   postId: string;
   postSlug: string;
@@ -23,15 +32,17 @@ export function ShareModal({ postId, postSlug, postTitle, open, onClose }: Share
   const fetcher = useFetcher<ShareLinksResponse>();
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
+  const shareLinks = fetcher.data && 'shareLinks' in fetcher.data ? fetcher.data.shareLinks : undefined;
+
+  // Only fetched once the modal opens; reopening reuses the links, or retries after a failure.
   useEffect(() => {
-    if (open && fetcher.state === 'idle' && !fetcher.data) {
+    if (open && fetcher.state === 'idle' && !shareLinks) {
       fetcher.load(paths.postShareLinks(postId, postSlug));
     }
     // fetcher identity changes every render by design; only re-run on open/postId change
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, postId, postSlug]);
 
-  const shareLinks = fetcher.data && 'shareLinks' in fetcher.data ? fetcher.data.shareLinks : undefined;
   const errorMsg = fetcher.data && 'error' in fetcher.data ? fetcher.data.error : undefined;
 
   const copy = async (url: string, key: string) => {
@@ -39,41 +50,6 @@ export function ShareModal({ postId, postSlug, postTitle, open, onClose }: Share
     setCopiedKey(key);
     setTimeout(() => setCopiedKey((current) => (current === key ? null : current)), COPY_FEEDBACK_MS);
   };
-
-  const platforms = shareLinks
-    ? [
-        {
-          key: SocialPlatform.Facebook,
-          label: 'Facebook',
-          url: shareLinks.facebook,
-          Icon: Icons.Facebook,
-        },
-        {
-          key: SocialPlatform.Twitter,
-          label: 'Twitter / X',
-          url: shareLinks.twitter,
-          Icon: Icons.Twitter,
-        },
-        {
-          key: SocialPlatform.LinkedIn,
-          label: 'LinkedIn',
-          url: shareLinks.linkedin,
-          Icon: Icons.LinkedIn,
-        },
-        {
-          key: SocialPlatform.Telegram,
-          label: 'Telegram',
-          url: shareLinks.telegram,
-          Icon: Icons.Telegram,
-        },
-        {
-          key: SocialPlatform.Whatsapp,
-          label: 'Whatsapp',
-          url: shareLinks.whatsapp,
-          Icon: Icons.Whatsapp,
-        },
-      ]
-    : [];
 
   return (
     <Modal open={open} onClose={onClose} ariaLabelledBy="share-modal-title">
@@ -97,36 +73,41 @@ export function ShareModal({ postId, postSlug, postTitle, open, onClose }: Share
         )}
         {errorMsg && <p className="text-sm text-red-500">{errorMsg}</p>}
 
-        {platforms.map(({ key, label, url, Icon }) => (
-          <div
-            key={key}
-            className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-100 transition-colors"
-          >
-            <div className="flex items-center space-x-3">
-              <Icon />
-              <span className="text-sm font-bold text-slate-800">{label}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <a
-                href={url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors"
+        {shareLinks &&
+          PLATFORMS.map(({ key, label, Icon }) => {
+            const url = shareLinks[key];
+
+            return (
+              <div
+                key={key}
+                className="flex items-center justify-between p-3 rounded-xl bg-slate-50 border border-slate-100 hover:border-blue-100 transition-colors"
               >
-                Share Link
-              </a>
-              <button
-                type="button"
-                onClick={() => copy(url, key)}
-                className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-white rounded-lg transition-all flex items-center"
-                title="Copy link"
-              >
-                <Icons.Copy />
-                {copiedKey === key && <span className="text-[10px] font-bold text-blue-600 ml-0.5">Copied</span>}
-              </button>
-            </div>
-          </div>
-        ))}
+                <div className="flex items-center space-x-3">
+                  <Icon />
+                  <span className="text-sm font-bold text-slate-800">{label}</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors"
+                  >
+                    Share Link
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => copy(url, key)}
+                    className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-white rounded-lg transition-all flex items-center"
+                    title="Copy link"
+                  >
+                    <Icons.Copy />
+                    {copiedKey === key && <span className="text-[10px] font-bold text-blue-600 ml-0.5">Copied</span>}
+                  </button>
+                </div>
+              </div>
+            );
+          })}
       </div>
     </Modal>
   );
